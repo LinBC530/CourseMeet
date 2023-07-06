@@ -21,6 +21,13 @@ const routes = [
       { path: '', component: () => import('pages/exitPage.vue') }
     ]
   },
+  {
+    path: '/Whiteboard',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/WhiteboardPage.vue') }
+    ]
+  },
 
   // Always leave this as last one,
   // but you can also remove it

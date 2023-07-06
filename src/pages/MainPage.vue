@@ -7,9 +7,9 @@ import CourseMenu from "src/components/CourseMenu.vue";
 import { reactive } from "vue";
 //Main頁面預設狀態
 const ClientState = reactive({
-  CourseMenu: true,
+  CourseMenu: false,
   Course: false,
-  Meeting: false,
+  Meeting: true,
   Exit: false,
 });
 </script>

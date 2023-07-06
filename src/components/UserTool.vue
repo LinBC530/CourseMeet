@@ -104,6 +104,7 @@ function ToolOnClick(obj) {
 #MsgButton:hover,
 #HomeWorkButton:hover,
 #SettingButton:hover {
+  cursor: pointer;
   border-radius: 10pt;
   background-color: rgb(113, 113, 113);
 }

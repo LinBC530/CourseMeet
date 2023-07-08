@@ -16,7 +16,6 @@ const ClientState = reactive({
 
 <template>
   <div id="main">
-    <div id="tool"><UserTool /></div>
     <div id="view">
       <div id="Meeting" v-if="ClientState.Meeting">
         <div id="MeetingContent"><View /></div>
@@ -25,6 +24,7 @@ const ClientState = reactive({
       <div id="exit" v-if="ClientState.Exit"><Exit /></div>
       <div id="CourseMenu" v-if="ClientState.CourseMenu"><CourseMenu /></div>
     </div>
+    <div id="tool"><UserTool /></div>
   </div>
 </template>
 
@@ -36,9 +36,9 @@ const ClientState = reactive({
   min-width: 1000pt;
   display: flex;
 }
+
 #tool {
   height: 100%;
-  width: 400pt;
   border: 1pt solid red;
 }
 #view,

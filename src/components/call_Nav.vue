@@ -1,42 +1,90 @@
 <script setup>
 import { useCounterStore } from "../stores/example-store";
 import { useRouter } from "vue-router";
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 const store = useCounterStore();
 const router = useRouter();
 
 function end() {
   router.push({ path: "/Exit" });
 }
+function openWhiteBoard() {
+  const routeData = router.resolve({
+    path: "/whiteboard",
+  });
+  window.open(routeData.href, "_blank");
+}
+function raisedHand() {
+  $q.notify({
+    message: "你舉手",
+    color: "purple",
+  });
+}
 </script>
 
 <template>
   <div id="botton">
     <div id="left">
-      <button class="btn" id="whiteboard">
-        <q-icon class="material-symbols-outlined" name="draw" size="36px" color="black"></q-icon>
+      <button class="btn" id="whiteboard" @click="openWhiteBoard">
+        <q-icon
+          class="material-symbols-outlined"
+          name="draw"
+          size="36px"
+          color="black"
+        ></q-icon>
       </button>
-      <button class="btn" id="web">
-        <q-icon class="material-symbols-outlined" name="web_asset" size="36px" color="black"></q-icon>
-      </button>
+      <!-- <button class="btn" id="web">
+        <q-icon
+          class="material-symbols-outlined"
+          name="web_asset"
+          size="36px"
+          color="black"
+        ></q-icon>
+      </button> -->
     </div>
     <div id="center">
       <button id="end_Call" @click="end">
-        <q-icon class="material-symbols-outlined" name="call_end" size="36px"></q-icon>
+        <q-icon
+          class="material-symbols-outlined"
+          name="call_end"
+          size="36px"
+        ></q-icon>
       </button>
     </div>
     <div id="right">
       <button class="btn" id="VideoCam">
-        <q-icon class="material-symbols-outlined" name="videocam" size="36px" color="black"></q-icon>
+        <q-icon
+          class="material-symbols-outlined"
+          name="videocam"
+          size="36px"
+          color="black"
+        ></q-icon>
       </button>
       <button class="btn" id="Mic">
-        <q-icon class="material-symbols-outlined" name="mic" size="36px" color="black"></q-icon>
+        <q-icon
+          class="material-symbols-outlined"
+          name="mic"
+          size="36px"
+          color="black"
+        ></q-icon>
       </button>
       <button class="btn" id="Present" @click="store.startPublish(false)">
-        <q-icon class="material-symbols-outlined" name="present_to_all" size="36px" color="black"></q-icon>
+        <q-icon
+          class="material-symbols-outlined"
+          name="present_to_all"
+          size="36px"
+          color="black"
+        ></q-icon>
       </button>
-      <button class="btn" id="raised_hand">
-        <q-icon class="material-symbols-outlined" name="pan_tool" size="36px" color="black"></q-icon>
+      <button class="btn" id="raised_hand" @click="raisedHand">
+        <q-icon
+          class="material-symbols-outlined"
+          name="pan_tool"
+          size="36px"
+          color="black"
+        ></q-icon>
       </button>
     </div>
   </div>
@@ -52,14 +100,14 @@ function end() {
   background-color: rgb(240, 240, 240);
   border-radius: 20pt 20pt 0pt 0pt;
 }
-#left{
+#left {
   height: 100%;
   width: 45%;
   display: flex;
   align-items: center;
   border: 2pt solid rgb(0, 120, 139);
 }
-#center{
+#center {
   height: 100%;
   width: 10%;
   display: flex;
@@ -67,7 +115,7 @@ function end() {
   justify-content: center;
   border: 2pt solid rgb(0, 139, 49);
 }
-#right{
+#right {
   height: 100%;
   width: 45%;
   display: flex;

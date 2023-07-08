@@ -5,7 +5,6 @@ const http = require("http").Server(app);
 const io = require("socket.io")(http);
 const cors = require("cors");
 const port = process.env.PORT || 3000;
-const t = require("socket.io").Server
 
 http.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
@@ -19,8 +18,8 @@ app.use(cors());
 app.post("/checkAccount", express.json(), async (req, res) => {
   console.dir(req.method);
   JSON.stringify(req.body);
-  setTimeout(async() => {res.send(await DB.getUserData(req.body.Email, req.body.Pwd))}, 5000)
-  // res.send(await DB.getUserData(req.body.Email, req.body.Pwd));
+  // setTimeout(async() => {res.send(await DB.getUserData(req.body.Email, req.body.Pwd))}, 5000)
+  res.send(await DB.getUserData(req.body.Email, req.body.Pwd));
 });
 //新增帳戶資料用
 app.post("/newAccount", express.json(), async (req, res) => {

@@ -20,6 +20,7 @@ function raisedHand() {
   $q.notify({
     message: "你舉手",
     color: "purple",
+    position: "bottom-right"
   });
 }
 </script>

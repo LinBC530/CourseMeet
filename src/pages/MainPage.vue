@@ -2,15 +2,14 @@
 import UserTool from "src/components/UserTool.vue";
 import View from "src/components/View.vue";
 import call_Nav from "src/components/call_Nav.vue";
-import Exit from "src/components/Exit.vue";
 import CourseMenu from "src/components/CourseMenu.vue";
 import { reactive } from "vue";
+
 //Main頁面預設狀態
 const ClientState = reactive({
   CourseMenu: false,
   Course: false,
   Meeting: true,
-  Exit: false,
 });
 </script>
 
@@ -21,7 +20,6 @@ const ClientState = reactive({
         <div id="MeetingContent"><View /></div>
         <div id="MeetingCallNav"><call_Nav /></div>
       </div>
-      <div id="exit" v-if="ClientState.Exit"><Exit /></div>
       <div id="CourseMenu" v-if="ClientState.CourseMenu"><CourseMenu /></div>
     </div>
     <div id="tool"><UserTool /></div>

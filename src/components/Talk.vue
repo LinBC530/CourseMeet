@@ -2,6 +2,7 @@
 import { io } from "socket.io-client";
 import { ref, reactive, onMounted, onUpdated } from "vue";
 import { useCounterStore } from "../stores/example-store";
+import { api } from "../boot/axios";
 const store = useCounterStore();
 
 // const URL = "http://localhost:3000"
@@ -22,6 +23,8 @@ onMounted(() => {
   output.addEventListener("dragover", dragover, false);
   output.addEventListener("drop", drop, false);
 });
+
+//更新時滾動至錨點位置(ap)
 onUpdated(() => {
   ap.scrollIntoView({ behavior: "smooth" });
 });
@@ -75,19 +78,19 @@ socket.on("allMessage", (msgs) => {
 });
 
 function dragenter(e) {
-  //停止預設行為
+  //阻止冒泡及停止預設行為
   e.stopPropagation();
   e.preventDefault();
 }
 
 function dragover(e) {
-  //停止預設行為
+  //阻止冒泡及停止預設行為
   e.stopPropagation();
   e.preventDefault();
 }
 
 function drop(e) {
-  //停止預設行為
+  //阻止冒泡及停止預設行為
   e.stopPropagation();
   e.preventDefault();
 
@@ -101,18 +104,41 @@ function handleFiles(files) {
     const file = files[i];
     const imageType = /image.*/;
 
-    if (!file.type.match(imageType)) {
-      continue;
+    //處理圖片格式
+    if (file.type.match(imageType)) {
+      const reader = new FileReader();
+      //轉Base64
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        socket.emit("sendMessage", {
+          name: store.userName,
+          message: reader.result,
+        });
+      };
     }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      socket.emit("sendMessage", {
-        name: store.userName,
-        message: e.target.result,
-      });
-    };
-    reader.readAsDataURL(file);
+    //檔案傳送至伺服器
+    else {
+      let formData = new FormData();
+      formData.append("file", file);
+      api
+        .post("/sendfile", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          responseType: "blob",
+        })
+        .then((res) => {
+          //(未處理完成)
+          console.dir(res.data);
+          var blob = new Blob([res.data]);
+          const link = document.createElement('a');
+          var url = window.URL.createObjectURL(blob);
+          link.href = url;
+          link.setAttribute('download', "file");
+          link.click();
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    }
   }
 }
 </script>
@@ -131,7 +157,7 @@ function handleFiles(files) {
       <form onclick="return false">
         <input id="msgbox" v-model="message" type="text" autocomplete="off" />
         <button id="snedButton" @click="sendMessage">
-          <q-icon name="send" size="36px"/>
+          <q-icon name="send" size="36px" />
         </button>
       </form>
     </div>

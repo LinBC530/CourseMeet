@@ -4,6 +4,7 @@ const app = express();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
 const cors = require("cors");
+const multer = require("multer");
 const port = process.env.PORT || 3000;
 
 http.listen(port, () => {
@@ -26,6 +27,33 @@ app.post("/newAccount", express.json(), async (req, res) => {
   console.dir(req.method);
   JSON.stringify(req.body);
   res.send(await DB.setUserData(req.body.Name, req.body.Email, req.body.Pwd));
+});
+
+//接收之檔案處理
+//存至硬碟
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./files");
+  },
+  filename: (req, file, cb) => {
+    //修改檔名為 日期+原檔名
+    var today = new Date();
+    today =
+      today.getFullYear().toString() +
+      today.getMonth().toString() +
+      today.getDate().toString() +
+      today.getHours().toString() +
+      today.getMonth().toString() +
+      today.getSeconds().toString();
+    cb(null, today + "_" + file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
+//接收檔案(未處理完成)
+app.post("/sendfile", upload.single("file"), async (req, res) => {
+  console.dir(req.method);
+  console.dir(req.file);
+  res.send(req.file);
 });
 //test
 // app.post("/test", express.json(), async (req, res) => {
@@ -56,9 +84,9 @@ io.on("connection", async (socket) => {
   socket.on("sendMessage", (msg) => {
     console.log("name: " + msg.name + "\nmessage: " + msg.message);
     msgs.push(msg);
-    DB.setChatRecord(msg.roomID, msg.name, msg.message)
+    DB.setChatRecord(msg.roomID, msg.name, msg.message);
     io.emit("sendMessage", msg);
   });
 
-  socket.on('drawing', (data) => socket.broadcast.emit('drawing', data));
+  socket.on("drawing", (data) => socket.broadcast.emit("drawing", data));
 });

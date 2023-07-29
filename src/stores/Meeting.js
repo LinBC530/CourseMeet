@@ -1,0 +1,21 @@
+import { defineStore } from "pinia";
+import { io } from "socket.io-client";
+
+export const useMeetingData = defineStore("useMeetingData", {
+  state: () => ({
+    socket: io("http://localhost:3000", { transports: ["websocket"], autoConnect: false }),
+    teacher: "null",
+    studens: [],
+  }),
+  persist: true,
+  getters: {},
+  actions: {
+    setMeetingData(teacher, studens) {
+      this.teacher = teacher;
+      this.studens = studens;
+    },
+    show() {
+      console.dir("this.socket");
+    },
+  },
+});

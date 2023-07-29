@@ -1,26 +1,27 @@
 <script setup>
 import { LocalStream, Client } from "ion-sdk-js";
 import { IonSFUJSONRPCSignal } from "ion-sdk-js/lib/signal/json-rpc-impl";
-import { useCounterStore } from "../stores/example-store";
+import { useScreenVideo } from "src/stores/ScreenVideo";
 import { ref, onMounted } from "vue";
-const store = useCounterStore();
+const store = useScreenVideo();
 
-// var test = navigator.mediaDevices.getUserMedia(constraints);
-
-let client;
+// let client;
 const sub_video = ref();
 const pub_video = ref();
 const isPub = ref(false);
 
 const signal = new IonSFUJSONRPCSignal("ws://localhost:7000/ws");
-client = new Client(signal);
+const client = new Client(signal);
 
 onMounted(() => {
   store.sub_video = sub_video;
   store.pub_video = pub_video;
   store.isPub = isPub;
-  store.LocalStream = LocalStream;
+  // store.LocalStream = LocalStream;
   store.client = client;
+
+  // store.getUserMedia()
+  // store.set_sub_video_src()
 });
 
 // LocalStream.getUserMedia({
@@ -30,8 +31,11 @@ onMounted(() => {
 //   codec: "vp8",
 // })
 //   .then((stream) => {
-//     pub_video.srcObject = stream;
-//     client.publish(stream);
+//     // pub_video.srcObject = stream;
+//     sub_video.value.srcObject = stream;
+//     sub_video.value.autoplay = true;
+//     sub_video.value.muted = false;
+//     // client.publish(stream);
 //   })
 //   .catch((error) => {
 //     console.error("Error accessing media devices.", error);
@@ -80,17 +84,17 @@ onMounted(() => {
 // }
 
 signal.onopen = () => store.client.join("test room");
-if (!store.isPub) {
-  client.ontrack = (track, stream) => {
-    store.sub_video.srcObject = stream;
-    store.sub_video.autoplay = true;
-    store.sub_video.muted = false;
+// if (!store.isPub) {
+//   client.ontrack = (track, stream) => {
+//     store.sub_video.srcObject = stream;
+//     store.sub_video.autoplay = true;
+//     store.sub_video.muted = false;
 
-    stream.onremovetrack = () => {
-      store.sub_video.srcObject = null;
-    };
-  };
-}
+//     stream.onremovetrack = () => {
+//       store.sub_video.srcObject = null;
+//     };
+//   };
+// }
 </script>
 
 <template>
@@ -129,8 +133,8 @@ if (!store.isPub) {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 80%;
-  width: 95%;
+  height: 100%;
+  width: 100%;
 }
 video {
   display: flex;
@@ -139,3 +143,4 @@ video {
   width: 100%;
 }
 </style>
+../stores/ScreenVideo

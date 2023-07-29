@@ -3,8 +3,18 @@ import UserTool from "src/components/UserTool.vue";
 import View from "src/components/View.vue";
 import call_Nav from "src/components/call_Nav.vue";
 import CourseMenu from "src/components/CourseMenu.vue";
+import { useMeetingData } from "src/stores/Meeting";
 import { reactive } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
+const Meeting = useMeetingData();
+
+if (!Meeting.socket.auth) {
+  router.push({ path: "/" });
+} else {
+  Meeting.socket.connect();
+}
 //Main頁面預設狀態
 const ClientState = reactive({
   CourseMenu: false,

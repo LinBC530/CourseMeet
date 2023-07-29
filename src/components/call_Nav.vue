@@ -1,10 +1,10 @@
 <script setup>
-import { useCounterStore } from "../stores/example-store";
+import { useScreenVideo } from "src/stores/ScreenVideo";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 
 const $q = useQuasar();
-const store = useCounterStore();
+const store = useScreenVideo();
 const router = useRouter();
 
 function end() {
@@ -155,3 +155,4 @@ function raisedHand() {
   background-color: rgb(200, 0, 0);
 }
 </style>
+../stores/ScreenVideo

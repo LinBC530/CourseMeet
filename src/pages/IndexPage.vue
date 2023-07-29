@@ -1,19 +1,29 @@
 <script setup>
-import Login from '../components/Login.vue';
-import { useCounterStore } from "../stores/example-store";
-import { useRouter } from "vue-router";
+// import Login from '../components/Login.vue';
+import Join from "src/components/Join.vue";
 
-const store = useCounterStore();
+import { useRouter } from "vue-router";
+import { useUserData } from "src/stores/UserData";
+import { useMeetingData } from 'src/stores/Meeting';
+
+const Meeting = useMeetingData()
+const store = useUserData();
 const router = useRouter();
 
-// if(store.userName){
-//   router.push({ path: "/Meet" })
-// }
+if (!store.haveUserData()) {
+  router.push({ path: "/Login" });
+} else {
+  Meeting.socket.auth = {
+    userID: store.userID,
+    userName: store.userName,
+  };
+  // Meeting.socket.connect()
+}
 </script>
 
 <template>
   <div id="login">
-    <Login />
+    <Join />
   </div>
 </template>
 

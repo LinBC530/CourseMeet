@@ -4,28 +4,11 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
-    ]
-  },
-  {
-    path: '/Main',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      { path: '', component: () => import('pages/MainPage.vue') }
-    ]
-  },
-  {
-    path: '/Exit',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      { path: '', component: () => import('pages/exitPage.vue') }
-    ]
-  },
-  {
-    path: '/Whiteboard',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      { path: '', component: () => import('pages/WhiteboardPage.vue') }
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: 'Main', component: () => import('pages/MainPage.vue') },
+      { path: 'Exit', component: () => import('pages/exitPage.vue') },
+      { path: 'Whiteboard', component: () => import('pages/WhiteboardPage.vue') },
+      { path: 'Login', component: () => import('pages/LoginPage.vue') }
     ]
   },
 

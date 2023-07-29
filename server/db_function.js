@@ -1,9 +1,19 @@
+const { ObjectId } = require("mongodb");
+
 module.exports = {
+  //user
   setUserData: setUserData,
   getUserData: getUserData,
-  setChatRecord: setChatRecord,
+  //meetingRoom
+  creatMeetingRoom: creatMeetingRoom,
+  getMeetingRoomData: getMeetingRoomData,
+  //chatRoom
   creatChatRoom: creatChatRoom,
-  getChatRecord: getChatRecord
+  setChatRecord: setChatRecord,
+  getChatRecord: getChatRecord,
+  //file
+  setFile: setFile,
+  getFile: getFile,
 };
 
 const MongoClient = require("mongodb").MongoClient;
@@ -79,7 +89,7 @@ async function getUserData(email, pwd) {
       if (user.password == data_in.password) {
         data_out.type = true;
         data_out.reason = "";
-        data_out.data = { name: user.name };
+        data_out.data = { userID: user._id.toString(), userName: user.name };
         return data_out;
       }
       //密碼不相符
@@ -108,26 +118,35 @@ async function getUserData(email, pwd) {
 //...............................................................................................................
 
 //...............................................MeetingRoom.....................................................
+
 //建立會議記錄(建立會議時)
-async function creatChatRoom(roomID) {
+async function creatMeetingRoom(teacherID) {
   //傳回之資料格式
   const data_out = {
     type: false,
     reason: "",
+    data: null,
   };
   try {
     const database = client.db("Meet");
     const Users = database.collection("MeetingRoom");
+    const chatRoomID = await (await creatChatRoom()).data.chatRoomID;
     //傳入之部分資料打包
     const data_in = {
-      RoomID: roomID,
-      Messages: [],
+      _id: new ObjectId(),
+      Teacher: teacherID,
+      Stuednts: [],
+      ChatRoomID: chatRoomID,
     };
     const result = await Users.insertOne(data_in);
     //收到DB資料
     if (result) {
       data_out.type = true;
       data_out.reason = "";
+      data_out.data = {
+        MeetingRoomID: result.insertedId.toString(),
+        ChatRoomID: chatRoomID,
+      };
       return data_out;
     }
     //DB發生錯誤
@@ -144,7 +163,79 @@ async function creatChatRoom(roomID) {
   }
 }
 
-async function setChatRecord(roomID, userID, msg) {
+//取得會議室資料
+async function getMeetingRoomData(MeetingRoomID) {
+  //傳回之資料格式
+  const data_out = {
+    type: false,
+    reason: "",
+    data: null,
+  };
+  try {
+    const database = client.db("Meet");
+    const Users = database.collection("MeetingRoom");
+    const result = await Users.findOne({ _id: MeetingRoomID });
+    //收到DB資料
+    if (result) {
+      data_out.type = true;
+      data_out.reason = "";
+      data_out.data = result;
+      return data_out;
+    }
+    //DB發生錯誤
+    else {
+      data_out.type = false;
+      data_out.reason = "發生錯誤，請稍後再試";
+      return data_out;
+    }
+  } catch {
+    //此方法發生錯誤
+    data_out.type = false;
+    data_out.reason = "發生錯誤，請稍後再試";
+    return data_out;
+  }
+}
+
+//建立聊天記錄(建立會議時)
+async function creatChatRoom() {
+  //傳回之資料格式
+  const data_out = {
+    type: false,
+    reason: "",
+    data: null,
+  };
+  try {
+    const database = client.db("Meet");
+    const Users = database.collection("ChatRoom");
+    //傳入之部分資料打包
+    const data_in = {
+      _id: new ObjectId(),
+      Messages: [],
+    };
+    const result = await Users.insertOne(data_in);
+    //收到DB資料
+    if (result) {
+      data_out.type = true;
+      data_out.reason = "";
+      data_out.data = { chatRoomID: result.insertedId.toString() };
+      return data_out;
+    }
+    //DB發生錯誤
+    else {
+      data_out.type = false;
+      data_out.reason = "發生錯誤，請稍後再試";
+      return data_out;
+    }
+  } catch {
+    //此方法發生錯誤
+    data_out.type = false;
+    data_out.reason = "發生錯誤，請稍後再試";
+    return data_out;
+  }
+}
+
+//儲存聊天紀錄
+async function setChatRecord(roomID, dataType, userID, userName, msg) {
   //傳回之資料格式
   const data_out = {
     type: false,
@@ -152,20 +243,23 @@ async function setChatRecord(roomID, userID, msg) {
   };
   try {
     const database = client.db("Meet");
-    const Users = database.collection("MeetingRoom");
+    const Meet = database.collection("MeetingRoom");
+    const chat = database.collection("ChatRoom");
     //傳入之部分資料打包
     const data_in = {
-      UserID: userID,
-      Message: msg,
+      dataType: dataType,
+      senderID: userID,
+      sender: userName,
+      content: msg,
     };
-    const haveData = await Users.findOne({ RoomID: roomID });
-    if (haveData) {
-      const result = await Users.updateOne(
-        { RoomID: roomID },
+    const ChatRoomID = await (await Meet.findOne({ _id: roomID })).ChatRoomID;
+    if (ChatRoomID) {
+      const result = await chat.updateOne(
+        { _id: new ObjectId(ChatRoomID) },
         { $push: { Messages: data_in } }
       );
       //收到DB資料
-      if (result) {
+      if (result.matchedCount) {
         data_out.type = true;
         data_out.reason = "";
         return data_out;
@@ -176,9 +270,7 @@ async function setChatRecord(roomID, userID, msg) {
         data_out.reason = "發生錯誤，請稍後再試";
         return data_out;
       }
-    }
-    //DB查無資料
-    else {
+    } else {
       data_out.type = false;
       data_out.reason = "無此會議";
       return data_out;
@@ -196,38 +288,118 @@ async function getChatRecord(roomID) {
   const data_out = {
     type: false,
     reason: "",
-    data: null
+    data: null,
   };
   try {
     const database = client.db("Meet");
-    const Users = database.collection("MeetingRoom");
-    // //傳入之部分資料打包
-    // const data_in = {
-    //   RoomID: roomID,
-    //   Messages: [],
-    // };
-    const result = await Users.findOne(roomID);
-    //收到DB資料
-    if (result) {
-      data_out.type = true;
-      data_out.reason = "";
-      data_out.data = result.Messages;
-      return data_out;
-    }
-    //DB發生錯誤
-    else {
+    const Meet = database.collection("MeetingRoom");
+    const Chat = database.collection("ChatRoom");
+    const ChatRoomID = await (await Meet.findOne({ _id: new ObjectId(roomID) })).ChatRoomID;
+    if (ChatRoomID) {
+      const result = await Chat.findOne({_id: new ObjectId(ChatRoomID)});
+      //收到DB資料
+      if (result) {
+        data_out.type = true;
+        data_out.reason = "";
+        data_out.data = result.Messages;
+        return data_out;
+      }
+      //DB發生錯誤
+      else {
+        data_out.type = false;
+        data_out.reason = "發生錯誤，請稍後再試...";
+        data_out.data = null;
+        return data_out;
+      }
+    } else {
       data_out.type = false;
-      data_out.reason = "發生錯誤，請稍後再試";
-      data_out.data = null
+      data_out.reason = "無此會議";
       return data_out;
     }
   } catch {
     //此方法發生錯誤
     data_out.type = false;
     data_out.reason = "發生錯誤，請稍後再試";
-    data_out.data = null
+    data_out.data = null;
     return data_out;
   }
 }
 
+//...............................................................................................................
+
+//..................................................Files........................................................
+//儲存上傳之檔案
+async function setFile(fileName, filePATH) {
+  //傳回之資料格式
+  const data_out = {
+    type: false,
+    reason: "",
+    data: null,
+  };
+  try {
+    const database = client.db("Meet");
+    const Users = database.collection("Files");
+    const result = await Users.insertOne({
+      fileName: fileName,
+      path: filePATH,
+    });
+    //收到DB資料
+    if (result) {
+      data_out.type = true;
+      data_out.reason = "";
+      data_out.data = {
+        fileID: result.insertedId.toString(),
+        fileName: fileName,
+      };
+      return data_out;
+    }
+    //DB發生錯誤
+    else {
+      data_out.type = false;
+      data_out.reason = "發生錯誤，請稍後再試";
+      data_out.data = null;
+      return data_out;
+    }
+  } catch {
+    //此方法發生錯誤
+    data_out.type = false;
+    data_out.reason = "發生錯誤，請稍後再試";
+    data_out.data = null;
+    return data_out;
+  }
+}
+//取得檔案路徑
+async function getFile(fileID) {
+  //傳回之資料格式
+  const data_out = {
+    type: false,
+    reason: "",
+    data: null,
+  };
+  try {
+    const database = client.db("Meet");
+    const Users = database.collection("Files");
+    const result = await Users.findOne({ _id: fileID });
+    //收到DB資料
+    if (result) {
+      data_out.type = true;
+      data_out.reason = "";
+      data_out.data = result.path;
+      return data_out;
+    }
+    //DB發生錯誤
+    else {
+      data_out.type = false;
+      data_out.reason = "發生錯誤，請稍後再試";
+      data_out.data = null;
+      return data_out;
+    }
+  } catch {
+    //此方法發生錯誤
+    data_out.type = false;
+    data_out.reason = "發生錯誤，請稍後再試";
+    data_out.data = null;
+    return data_out;
+  }
+}
 //...............................................................................................................

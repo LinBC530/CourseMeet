@@ -1,15 +1,21 @@
 <script setup>
-import { io } from "socket.io-client";
+// import { io } from "socket.io-client";
 import { ref, reactive, onMounted, onUpdated } from "vue";
-import { useCounterStore } from "../stores/example-store";
+import { useMeetingData } from "src/stores/Meeting";
+// import { useScreenVideo } from "src/stores/ScreenVideo";
+import { useUserData } from "src/stores/UserData";
 import { api } from "../boot/axios";
-const store = useCounterStore();
+import { useQuasar } from "quasar";
+
+const store = useUserData()
+const Meeting = useMeetingData();
+const $q = useQuasar();
 
 // const URL = "http://localhost:3000"
 // const socket = io(URL)
-const socket = io("http://localhost:3000", { transports: ["websocket"] });
+// const socket = io("http://localhost:3000", { transports: ["websocket"] });
+const socket = Meeting.socket;
 const message = ref("");
-const isBase64 = /base64/;
 var output, ap;
 const messages = reactive([]);
 
@@ -33,49 +39,62 @@ onUpdated(() => {
 function sendMessage() {
   if (message.value) {
     socket.emit("sendMessage", {
-      roomID: 123,
-      name: store.userName,
-      message: message.value,
+      dataType: "msg",
+      sender: store.userName,
+      content: message.value,
     });
     message.value = "";
   }
 }
 
-//將收到的訊息新增以<p class='msg'>格式顯示於聊天室
-socket.on("sendMessage", function (msg) {
-  if (isBase64.test(msg.message)) {
-    messages.push({
-      userName: msg.name,
-      message: '<img class="img" src="' + msg.message + '" />',
-      sent: !(store.userName == msg.name),
-    });
-  } else {
-    messages.push({
-      userName: msg.name,
-      message: msg.message,
-      sent: !(store.userName == msg.name),
-    });
-  }
-});
-
-//將所有聊天室訊息以<p class='msg'>格式顯示於聊天室
-socket.on("allMessage", (msgs) => {
-  for (let i = 0; i < Object.keys(msgs).length; i++) {
-    if (isBase64.test(msgs[i].message)) {
-      messages.push({
-        userName: msgs[i].name,
-        message: '<img class="img" src="' + msgs[i].message + '" />',
-        sent: !(store.userName == msgs[i].name),
-      });
-    } else {
-      messages.push({
-        userName: msgs[i].name,
-        message: msgs[i].message,
-        sent: !(store.userName == msgs[i].name),
-      });
+//判斷訊息型態並處理
+function judgmentDataType(msg) {
+  // console.dir("get msg")
+  //使用遞迴方式取得單一訊息
+  if (Array.isArray(msg)) {
+    for (let m of msg) {
+      judgmentDataType(m);
     }
+    return;
   }
-});
+  //對不同資料型態，進行對應處理
+  switch (msg.dataType) {
+    case "img":
+      messages.push({
+        dataType: "img",
+        userName: msg.sender,
+        message: '<img class="img" src="' + msg.content + '" />',
+        sent: !(store.userName == msg.sender),
+      });
+      break;
+    case "msg":
+      messages.push({
+        dataType: "msg",
+        userName: msg.sender,
+        message: msg.content,
+        sent: !(store.userName == msg.sender),
+      });
+      break;
+    case "file":
+      messages.push({
+        dataType: "file",
+        userName: msg.sender,
+        fileName: msg.fileName,
+        message: msg.content,
+        sent: !(store.userName == msg.sender),
+      });
+      break;
+    default:
+      break;
+  }
+}
+
+//將收到的訊息新增至messages，以顯示於聊天室
+socket.on("sendMessage", (msg) => judgmentDataType(msg));
+
+//將收到的訊息新增至messages，以顯示於聊天室
+socket.emit("allMessage", true)
+socket.on("allMessage", (msgs) => {console.dir("allmsg_client"); judgmentDataType(msgs)});
 
 function dragenter(e) {
   //阻止冒泡及停止預設行為
@@ -99,20 +118,22 @@ function drop(e) {
   handleFiles(files);
 }
 
+//處理圖片及檔案
 function handleFiles(files) {
   for (var i = 0; i < files.length; i++) {
     const file = files[i];
     const imageType = /image.*/;
 
-    //處理圖片格式
+    //處理圖片格式並傳送至伺服器(與聊天訊息相同方式傳送)
     if (file.type.match(imageType)) {
       const reader = new FileReader();
       //轉Base64
       reader.readAsDataURL(file);
       reader.onload = () => {
         socket.emit("sendMessage", {
-          name: store.userName,
-          message: reader.result,
+          dataType: "img",
+          sender: store.userName,
+          content: reader.result,
         });
       };
     }
@@ -121,25 +142,50 @@ function handleFiles(files) {
       let formData = new FormData();
       formData.append("file", file);
       api
-        .post("/sendfile", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-          responseType: "blob",
-        })
+        .post("/sendFile", formData)
         .then((res) => {
           //(未處理完成)
-          console.dir(res.data);
-          var blob = new Blob([res.data]);
-          const link = document.createElement('a');
-          var url = window.URL.createObjectURL(blob);
-          link.href = url;
-          link.setAttribute('download', "file");
-          link.click();
+          if (res.data.type) {
+            $q.notify({
+              message: "上傳成功",
+              color: "negative",
+            });
+            socket.emit("sendMessage", {
+              dataType: "file",
+              sender: store.userName,
+              fileName: res.data.data.fileName,
+              content: res.data.data.fileID,
+            });
+          } else
+            $q.notify({
+              message: res.data.reason,
+              color: "negative",
+            });
         })
         .catch((e) => {
           console.log(e);
         });
     }
   }
+}
+
+//下載檔案
+function getFile(fileID, fileName) {
+  //對server發出請求，等待srver傳回對應檔案ID(fileID)之檔案，並指定傳回格式為blob
+  api
+    .post("/getFile", { fileID: fileID }, { responseType: "blob" })
+    .then((res) => {
+      //產生一個超連結，並設置下載屬性，且指定下載之連結位置為傳回之檔案的參考位置，後執行下載
+      const Link = document.createElement("a");
+      Link.download = fileName;
+      Link.style.display = "none";
+      Link.href = URL.createObjectURL(res.data);
+      Link.click();
+      URL.revokeObjectURL(Link.href);
+    })
+    .catch((e) => {
+      console.log(e);
+    });
 }
 </script>
 
@@ -148,7 +194,15 @@ function handleFiles(files) {
     <div id="output">
       <div id="messages" style="padding: 5pt" v-for="msg in messages">
         <q-chat-message :name="msg.userName" :sent="msg.sent">
-          <div v-html="msg.message" />
+          <div v-if="msg.dataType == 'msg' || msg.dataType == 'img'" v-html="msg.message" />
+          <div
+            v-if="msg.dataType == 'file'"
+            class="file"
+            @click="getFile(msg.message, msg.fileName)"
+          >
+            <span>{{msg.fileName}}</span>
+            <q-icon name="download" />
+          </div>
         </q-chat-message>
       </div>
       <div id="ap" />
@@ -207,6 +261,16 @@ function handleFiles(files) {
   width: 80%;
 }
 
+.file {
+  color: rgb(0, 64, 255);
+  font-size: 20px;
+}
+
+.file:hover {
+  cursor: pointer;
+  color: rgb(92, 133, 255);
+}
+
 #input,
 form {
   height: 10%;
@@ -244,3 +308,4 @@ form {
   background-color: rgb(105, 105, 105);
 }
 </style>
+../stores/ScreenVideo

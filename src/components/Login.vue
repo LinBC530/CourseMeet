@@ -2,12 +2,13 @@
 import { reactive, ref } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
-import { useCounterStore } from "../stores/example-store";
+import { useUserData } from "src/stores/UserData";
 import { api } from "../boot/axios";
 
 const $q = useQuasar();
-const store = useCounterStore();
+const store = useUserData();
 const router = useRouter();
+const isPwd = ref(true);
 const haveAccount = ref(true);
 const user = reactive({
   Email: null,
@@ -18,7 +19,6 @@ const user = reactive({
 //設定Axios攔截器，加入等待中動畫
 api.interceptors.request.use(
   (req) => {
-    console.log("show");
     $q.loading.show();
     return req;
   },
@@ -47,8 +47,8 @@ function sendAccountData() {
         .then((res) => {
           if (res.data) {
             if (res.data.type) {
-              store.userName = res.data.data.name;
-              router.push({ path: "/Main" });
+              store.setUserData(res.data.data.userID, res.data.data.userName);
+              router.push({ path: "/" });
             } else {
               $q.notify({
                 message: res.data.reason,
@@ -64,6 +64,10 @@ function sendAccountData() {
         })
         .catch((e) => {
           console.log(e);
+          $q.notify({
+            message: "發生錯誤，請稍後再試",
+            color: "negative",
+          });
         });
     }
   }
@@ -88,8 +92,7 @@ function sendAccountData() {
                 color: "negative",
               });
             }
-          }
-          else {
+          } else {
             $q.notify({
               message: "發生錯誤，請稍後再試",
               color: "negative",
@@ -121,10 +124,32 @@ function sendAccountData() {
             id="name_box"
             v-model="user.Name"
             v-if="!haveAccount"
+            type="text"
             label="name"
+            :rules="[(value) => !!value || '請輸入名稱']"
           />
-          <q-input id="Email_box" v-model="user.Email" label="Email" />
-          <q-input id="pwd_box" v-model="user.Pwd" label="password" />
+          <q-input
+            id="Email_box"
+            v-model="user.Email"
+            type="email"
+            label="Email"
+            :rules="[(value) => !!value || '請輸入信箱']"
+          />
+          <q-input
+            id="pwd_box"
+            v-model="user.Pwd"
+            :type="isPwd ? 'password' : 'text'"
+            label="password"
+            :rules="[(value) => !!value || '請輸入密碼']"
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
         </div>
         <div id="button" v-if="haveAccount">
           <q-btn
@@ -204,3 +229,4 @@ form {
   font-size: 15pt;
 }
 </style>
+../stores/ScreenVideo

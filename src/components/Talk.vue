@@ -1,8 +1,6 @@
 <script setup>
-// import { io } from "socket.io-client";
 import { ref, reactive, onMounted, onUpdated } from "vue";
 import { useMeetingData } from "src/stores/Meeting";
-// import { useScreenVideo } from "src/stores/ScreenVideo";
 import { useUserData } from "src/stores/UserData";
 import { api } from "../boot/axios";
 import { useQuasar } from "quasar";
@@ -10,13 +8,9 @@ import { useQuasar } from "quasar";
 const store = useUserData()
 const Meeting = useMeetingData();
 const $q = useQuasar();
-
-// const URL = "http://localhost:3000"
-// const socket = io(URL)
-// const socket = io("http://localhost:3000", { transports: ["websocket"] });
 const socket = Meeting.socket;
 const message = ref("");
-var output, ap;
+let output, ap;
 const messages = reactive([]);
 
 onMounted(() => {
@@ -24,14 +18,14 @@ onMounted(() => {
   //錨點
   ap = document.getElementById("ap");
 
-  //圖片事件監聽
+  //拖曳事件監聽
   output.addEventListener("dragenter", dragenter, false);
   output.addEventListener("dragover", dragover, false);
   output.addEventListener("drop", drop, false);
 });
 
-//更新時滾動至錨點位置(ap)
 onUpdated(() => {
+  //更新時滾動至錨點位置(ap)
   ap.scrollIntoView({ behavior: "smooth" });
 });
 
@@ -93,8 +87,8 @@ function judgmentDataType(msg) {
 socket.on("sendMessage", (msg) => judgmentDataType(msg));
 
 //將收到的訊息新增至messages，以顯示於聊天室
-socket.emit("allMessage", true)
-socket.on("allMessage", (msgs) => {console.dir("allmsg_client"); judgmentDataType(msgs)});
+socket.emit("allMessage")
+socket.on("allMessage", (msgs) => judgmentDataType(msgs));
 
 function dragenter(e) {
   //阻止冒泡及停止預設行為
@@ -120,7 +114,7 @@ function drop(e) {
 
 //處理圖片及檔案
 function handleFiles(files) {
-  for (var i = 0; i < files.length; i++) {
+  for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const imageType = /image.*/;
 
@@ -308,4 +302,3 @@ form {
   background-color: rgb(105, 105, 105);
 }
 </style>
-../stores/ScreenVideo

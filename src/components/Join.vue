@@ -2,13 +2,13 @@
 import { ref } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
-// import { useUserData } from "src/stores/UserData";
 import { useMeetingData } from "src/stores/Meeting";
+import { useUserData } from "src/stores/UserData";
 import { api } from "../boot/axios";
 
 const $q = useQuasar();
-// const store = useUserData();
 const Meeting = useMeetingData();
+const user = useUserData();
 const router = useRouter();
 const join = ref(true);
 const MeetingRoomID = ref("");
@@ -16,7 +16,6 @@ const MeetingRoomID = ref("");
 //加入會議室
 function joinMeetingRoom() {
   if (MeetingRoomID.value && MeetingRoomID.value.length == 24) {
-    console.dir(MeetingRoomID.value.length);
     api
       .post("/checkMeeting", { RoomID: MeetingRoomID.value })
       .then((res) => {
@@ -60,7 +59,7 @@ function joinMeetingRoom() {
 //建立會議室
 function creatMeetingRoom() {
   api
-    .post("/CreatMeetingRoom", { UserID: "123456" })
+    .post("/CreatMeetingRoom", { UserID: user.userID })
     .then((res) => {
       if (res.data) {
         if (res.data.type) {
@@ -86,11 +85,35 @@ function creatMeetingRoom() {
       });
     });
 }
+
+function signOut(){
+  user.$reset();
+  router.push({ path: "/Login" });
+}
 </script>
 
 <template>
   <q-card id="loginPage">
     <q-card-section>
+      <div id="account">
+        <q-avatar size="md" style="margin-right: 10px">
+          <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
+        </q-avatar>
+        <span>{{ user.userName }}</span>
+        <q-menu style="text-align: center;">
+          <q-list>
+            <q-item clickable v-ripple>
+              <q-item-section>切換帳戶</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple>
+              <q-item-section>帳戶設定</q-item-section>
+            </q-item>
+            <q-item @click="signOut" clickable v-ripple>
+              <q-item-section style="color: red;">登出</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </div>
       <div id="title">
         <span>Discuss</span>
       </div>
@@ -157,6 +180,20 @@ function creatMeetingRoom() {
 #nav span:hover {
   cursor: pointer;
 }
+#account {
+  width: 150px;
+  padding: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  user-select: none;
+}
+#account:hover {
+  background-color: rgb(234, 234, 234);
+}
+
 #title {
   height: 40%;
   display: flex;

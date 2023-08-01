@@ -74,6 +74,7 @@ app.post("/checkMeeting", express.json(), async (req, res) => {
   else res.send({ type: false, reason: "查無此會議" });
 });
 
+
 // app.post("/setChatRecord", express.json(), async (req, res) => {
 //   console.dir(req.method);
 //   console.dir(JSON.stringify(req.body));
@@ -89,34 +90,41 @@ async function getOnMeetingRoomUsers(RoomID) {
       userName: socket.handshake.auth.userName,
     });
   }
+  // console.dir(users)
   return users;
 }
 
-
 io.on("connection", async (socket) => {
-  // console.dir(socket.handshake.auth);
-  socket.join(socket.handshake.auth.RoomID);
-  // console.dir(socket.handshake.auth.RoomID)
 
-  // socket.to(socket.handshake.auth.RoomID).emit("users_in_the_room", await getOnMeetingRoomUsers(socket.handshake.auth.RoomID));
-  // console.log(await getOnMeetingRoomUsers(socket.handshake.auth.RoomID))
+  //加入至對應房間
+  socket.join(socket.handshake.auth.RoomID);
+
+  //傳送房間內所有用戶
+  io.to(socket.handshake.auth.RoomID).emit(
+    "users_in_the_room",
+    await getOnMeetingRoomUsers(socket.handshake.auth.RoomID)
+  );
 
   console.log(socket.handshake.auth.userName + " 加入討論");
 
-  socket.on("disconnect", () =>
-    console.log(socket.handshake.auth.userName + " 離開討論")
-  );
+  socket.on("disconnect", async() => {
+    //傳送房間內所有用戶
+    io.to(socket.handshake.auth.RoomID).emit(
+      "users_in_the_room",
+      await getOnMeetingRoomUsers(socket.handshake.auth.RoomID)
+    );
+    console.log(socket.handshake.auth.userName + " 離開討論");
+  });
 
   //對新進用戶傳送目前會議訊息紀錄
-  socket.on("allMessage", async (isOPEN) => {
-    if (isOPEN)
-      socket.emit(
-        "allMessage",
-        //取得訊息紀錄
-        await (
-          await DB.getChatRecord(socket.handshake.auth.RoomID)
-        ).data
-      );
+  socket.on("allMessage", async () => {
+    socket.emit(
+      "allMessage",
+      //取得訊息紀錄
+      await (
+        await DB.getChatRecord(socket.handshake.auth.RoomID)
+      ).data
+    );
   });
 
   //傳送訊息給所有用戶並儲存訊息

@@ -1,12 +1,15 @@
 <script setup>
 import { ref, reactive } from "vue";
 import Talk from "./Talk.vue";
+import Member from "./Member.vue";
+import MeetingMinutes from "./MeetingMinutes.vue";
+import Account from "./Account.vue"
 const navSwitchType = ref(false);
 
 //工具是否啟用(預設狀態)
 const show = reactive({
   memberList: false,
-  meetRecord: false,
+  meetingMinutes: false,
   charRoom: true,
   assistant_AI: false,
   userAccount: false,
@@ -20,17 +23,17 @@ function ToolOnClick(obj) {
       navSwitchType.value = !navSwitchType.value;
     } else {
       show.memberList = true;
-      show.meetRecord = false;
+      show.meetingMinutes = false;
       show.charRoom = false;
       show.assistant_AI = false;
       show.userAccount = false;
     }
   } else if (obj.target.matches(".meetRecord")) {
-    if (show.meetRecord == true) {
+    if (show.meetingMinutes == true) {
       navSwitchType.value = !navSwitchType.value;
     } else {
       show.memberList = false;
-      show.meetRecord = true;
+      show.meetingMinutes = true;
       show.charRoom = false;
       show.assistant_AI = false;
       show.userAccount = false;
@@ -40,7 +43,7 @@ function ToolOnClick(obj) {
       navSwitchType.value = !navSwitchType.value;
     } else {
       show.memberList = false;
-      show.meetRecord = false;
+      show.meetingMinutes = false;
       show.charRoom = true;
       show.assistant_AI = false;
       show.userAccount = false;
@@ -50,7 +53,7 @@ function ToolOnClick(obj) {
       navSwitchType.value = !navSwitchType.value;
     } else {
       show.memberList = false;
-      show.meetRecord = false;
+      show.meetingMinutes = false;
       show.charRoom = false;
       show.assistant_AI = true;
       show.userAccount = false;
@@ -60,7 +63,7 @@ function ToolOnClick(obj) {
       navSwitchType.value = !navSwitchType.value;
     } else {
       show.memberList = false;
-      show.meetRecord = false;
+      show.meetingMinutes = false;
       show.charRoom = false;
       show.assistant_AI = false;
       show.userAccount = true;
@@ -73,8 +76,11 @@ function ToolOnClick(obj) {
 
 <template>
   <div id="body">
-    <div id="main" v-if="navSwitchType">
-      <Talk v-if="show.charRoom" />
+    <div id="main" v-show="navSwitchType">
+      <Talk v-show="show.charRoom" />
+      <Member v-show="show.memberList" />
+      <MeetingMinutes v-show="show.meetingMinutes" />
+      <Account v-show="show.userAccount" />
     </div>
     <div id="nav" @click="navSwitchType = !navSwitchType">
       <div class="memberList" id="memberList_Button" @click="ToolOnClick">
@@ -83,7 +89,7 @@ function ToolOnClick(obj) {
       </div>
       <div class="meetRecord" id="meetRecord_Button" @click="ToolOnClick">
         <q-icon class="meetRecord" name="library_books" size="36px"></q-icon>
-        <span class="meetRecord" id="icon_text">紀錄</span>
+        <span class="meetRecord" id="icon_text">會議紀錄</span>
       </div>
       <div class="charRoom" id="charRoom_Button" @click="ToolOnClick">
         <q-icon class="charRoom" name="chat" size="36px"></q-icon>
@@ -93,10 +99,10 @@ function ToolOnClick(obj) {
         <q-icon class="assistant_AI" name="school" size="36px"></q-icon>
         <span class="assistant_AI" id="icon_text">AI助教</span>
       </div>
-      <div class="userAccount" id="userAccount_Button" @click="ToolOnClick">
+      <!-- <div class="userAccount" id="userAccount_Button" @click="ToolOnClick">
         <q-icon class="userAccount" name="account_circle" size="36px"></q-icon>
         <span class="userAccount" id="icon_text">帳戶</span>
-      </div>
+      </div> -->
     </div>
 
   </div>

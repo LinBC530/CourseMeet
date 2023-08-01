@@ -7,7 +7,7 @@ export const useMeetingData = defineStore("useMeetingData", {
     teacher: "null",
     studens: [],
   }),
-  persist: true,
+  persist: false,
   getters: {},
   actions: {
     setMeetingData(teacher, studens) {

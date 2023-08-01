@@ -33,47 +33,47 @@
 </style>
 
 <script>
-import { defineComponent, ref } from "vue";
-import EssentialLink from "components/EssentialLink.vue";
+// import { defineComponent, ref } from "vue";
+// import EssentialLink from "components/EssentialLink.vue";
 
-const linksList = [
-  {
-    title: "Docs",
-    caption: "quasar.dev",
-    icon: "school",
-    link: "#",
-  },
-  {
-    title: "Github",
-    caption: "github.com/quasarframework",
-    icon: "code",
-    link: "#",
-  },
-  {
-    title: "Discord Chat Channel",
-    caption: "chat.quasar.dev",
-    icon: "chat",
-    link: "#",
-  },
-];
+// const linksList = [
+//   {
+//     title: "Docs",
+//     caption: "quasar.dev",
+//     icon: "school",
+//     link: "#",
+//   },
+//   {
+//     title: "Github",
+//     caption: "github.com/quasarframework",
+//     icon: "code",
+//     link: "#",
+//   },
+//   {
+//     title: "Discord Chat Channel",
+//     caption: "chat.quasar.dev",
+//     icon: "chat",
+//     link: "#",
+//   },
+// ];
 
-export default defineComponent({
-  name: "MainLayout",
+// export default defineComponent({
+//   name: "MainLayout",
 
-  components: {
-    EssentialLink,
-  },
+//   // components: {
+//   //   EssentialLink,
+//   // },
 
-  setup() {
-    const leftDrawerOpen = ref(false);
+//   setup() {
+//     const leftDrawerOpen = ref(false);
 
-    return {
-      essentialLinks: linksList,
-      leftDrawerOpen,
-      toggleLeftDrawer() {
-        leftDrawerOpen.value = !leftDrawerOpen.value;
-      },
-    };
-  },
-});
+//     return {
+//       essentialLinks: linksList,
+//       leftDrawerOpen,
+//       toggleLeftDrawer() {
+//         leftDrawerOpen.value = !leftDrawerOpen.value;
+//       },
+//     };
+//   },
+// });
 </script>

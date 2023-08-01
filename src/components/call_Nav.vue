@@ -2,10 +2,13 @@
 import { useScreenVideo } from "src/stores/ScreenVideo";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
+import { ref } from "vue";
 
 const $q = useQuasar();
 const store = useScreenVideo();
 const router = useRouter();
+const mic_isOpen = ref(false)
+const cam_isOpen = ref(false)
 
 function end() {
   router.push({ path: "/Exit" });
@@ -55,18 +58,20 @@ function raisedHand() {
       </button>
     </div>
     <div id="right">
-      <button class="btn" id="VideoCam">
+      <button class="btn" id="VideoCam" @click="cam_isOpen = !cam_isOpen">
         <q-icon
           class="material-symbols-outlined"
-          name="videocam"
+          :name="cam_isOpen? 'videocam' : 'videocam_off'"
+          :color="cam_isOpen? 'grey-10' : 'red'"
           size="36px"
           color="black"
         ></q-icon>
       </button>
-      <button class="btn" id="Mic">
+      <button class="btn" id="Mic" @click="mic_isOpen = !mic_isOpen">
         <q-icon
           class="material-symbols-outlined"
-          name="mic"
+          :name="mic_isOpen? 'mic' : 'mic_off'"
+          :color="mic_isOpen? 'grey-10' : 'red'"
           size="36px"
           color="black"
         ></q-icon>

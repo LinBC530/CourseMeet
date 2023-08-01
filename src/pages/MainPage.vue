@@ -2,35 +2,40 @@
 import UserTool from "src/components/UserTool.vue";
 import View from "src/components/View.vue";
 import call_Nav from "src/components/call_Nav.vue";
-import CourseMenu from "src/components/CourseMenu.vue";
 import { useMeetingData } from "src/stores/Meeting";
-import { reactive } from "vue";
 import { useRouter } from "vue-router";
+import { onUnmounted, ref } from "vue";
+
+onUnmounted(() => {
+  //刪除users_in_the_room事件監聽(避免事件重複觸發)
+  Meeting.socket.removeListener("users_in_the_room");
+});
 
 const router = useRouter();
 const Meeting = useMeetingData();
 
+const socket = Meeting.socket;
+console.dir(Meeting.socket);
 if (!Meeting.socket.auth) {
   router.push({ path: "/" });
 } else {
   Meeting.socket.connect();
 }
-//Main頁面預設狀態
-const ClientState = reactive({
-  CourseMenu: false,
-  Course: false,
-  Meeting: true,
+
+//更新目前在線用戶
+socket.on("users_in_the_room", (users) => {
+  Meeting.studens = users;
 });
+
 </script>
 
 <template>
   <div id="main">
     <div id="view">
-      <div id="Meeting" v-if="ClientState.Meeting">
+      <div id="Meeting">
         <div id="MeetingContent"><View /></div>
         <div id="MeetingCallNav"><call_Nav /></div>
       </div>
-      <div id="CourseMenu" v-if="ClientState.CourseMenu"><CourseMenu /></div>
     </div>
     <div id="tool"><UserTool /></div>
   </div>

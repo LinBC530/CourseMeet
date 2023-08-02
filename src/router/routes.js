@@ -8,7 +8,8 @@ const routes = [
       { path: 'Main', component: () => import('pages/MeetingPage.vue') },
       { path: 'Exit', component: () => import('pages/exitPage.vue') },
       { path: 'Whiteboard', component: () => import('pages/WhiteboardPage.vue') },
-      { path: 'Login', component: () => import('pages/LoginPage.vue') }
+      { path: 'Login', component: () => import('pages/LoginPage.vue') },
+      { path: 'Account', component: () => import('pages/AccountPage.vue')}
     ]
   },
 

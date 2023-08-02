@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 export const useUserData = defineStore("UserData", {
   state: () => ({
     userID: null,
+    userEmail: null,
     userName: null,
   }),
   persist: true,

@@ -88,7 +88,7 @@ function creatMeetingRoom() {
 }
 
 //登出
-function signOut(){
+function signOut() {
   //重置LocalStorage中的UserData
   user.$reset();
   router.push({ path: "/Login" });
@@ -103,13 +103,17 @@ function signOut(){
           <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
         </q-avatar> -->
         <span>Hi, {{ user.userName }}</span>
-        <q-menu style="text-align: center;">
+        <q-menu style="text-align: center">
           <q-list>
-            <q-item clickable v-ripple>
+            <q-item
+              clickable
+              v-ripple
+              @click="router.push({ path: '/Account' })"
+            >
               <q-item-section>帳戶設定</q-item-section>
             </q-item>
             <q-item @click="signOut" clickable v-ripple>
-              <q-item-section style="color: red;">登出</q-item-section>
+              <q-item-section style="color: red">登出</q-item-section>
             </q-item>
           </q-list>
         </q-menu>

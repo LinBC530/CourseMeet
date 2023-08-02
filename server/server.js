@@ -27,6 +27,10 @@ app.post("/newAccount", express.json(), async (req, res) => {
   JSON.stringify(req.body);
   res.send(await DB.setUserData(req.body.Name, req.body.Email, req.body.Pwd));
 });
+//修改帳戶資料
+// app.put("/changeAccountData", express.json(), async (req, res) => {
+//   JSON.stringify(req.body);
+// });
 
 //接收檔案之格式處理
 //存至硬碟

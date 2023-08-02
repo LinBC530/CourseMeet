@@ -1,6 +1,5 @@
 <script setup>
 import Login from '../components/Login.vue';
-
 import { useRouter } from "vue-router";
 import { useUserData } from 'src/stores/UserData';
 

@@ -8,7 +8,9 @@ import { api } from "../boot/axios";
 const $q = useQuasar();
 const store = useUserData();
 const router = useRouter();
+//密碼是否可見
 const isPwd = ref(true);
+//登入或註冊
 const haveAccount = ref(true);
 const user = reactive({
   Email: null,
@@ -229,4 +231,3 @@ form {
   font-size: 15pt;
 }
 </style>
-../stores/ScreenVideo

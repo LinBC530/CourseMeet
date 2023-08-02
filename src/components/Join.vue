@@ -10,6 +10,7 @@ const $q = useQuasar();
 const Meeting = useMeetingData();
 const user = useUserData();
 const router = useRouter();
+//判別為加入或建立會議
 const join = ref(true);
 const MeetingRoomID = ref("");
 
@@ -86,7 +87,9 @@ function creatMeetingRoom() {
     });
 }
 
+//登出
 function signOut(){
+  //重置LocalStorage中的UserData
   user.$reset();
   router.push({ path: "/Login" });
 }
@@ -96,15 +99,12 @@ function signOut(){
   <q-card id="loginPage">
     <q-card-section>
       <div id="account">
-        <q-avatar size="md" style="margin-right: 10px">
+        <!-- <q-avatar size="md" style="margin-right: 10px">
           <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
-        </q-avatar>
-        <span>{{ user.userName }}</span>
+        </q-avatar> -->
+        <span>Hi, {{ user.userName }}</span>
         <q-menu style="text-align: center;">
           <q-list>
-            <q-item clickable v-ripple>
-              <q-item-section>切換帳戶</q-item-section>
-            </q-item>
             <q-item clickable v-ripple>
               <q-item-section>帳戶設定</q-item-section>
             </q-item>
@@ -184,6 +184,7 @@ function signOut(){
   width: 150px;
   padding: 10px;
   border-radius: 10px;
+  text-align: center;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

@@ -4,8 +4,8 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
-      { path: 'Main', component: () => import('pages/MainPage.vue') },
+      { path: '', component: () => import('pages/JoinPage.vue') },
+      { path: 'Main', component: () => import('pages/MeetingPage.vue') },
       { path: 'Exit', component: () => import('pages/exitPage.vue') },
       { path: 'Whiteboard', component: () => import('pages/WhiteboardPage.vue') },
       { path: 'Login', component: () => import('pages/LoginPage.vue') }

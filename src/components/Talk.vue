@@ -87,7 +87,6 @@ function judgmentDataType(msg) {
 socket.on("sendMessage", (msg) => judgmentDataType(msg));
 
 //將收到的訊息新增至messages，以顯示於聊天室
-socket.emit("allMessage")
 socket.on("allMessage", (msgs) => judgmentDataType(msgs));
 
 function dragenter(e) {

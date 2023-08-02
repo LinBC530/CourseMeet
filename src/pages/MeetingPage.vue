@@ -4,19 +4,21 @@ import View from "src/components/View.vue";
 import call_Nav from "src/components/call_Nav.vue";
 import { useMeetingData } from "src/stores/Meeting";
 import { useRouter } from "vue-router";
-import { onUnmounted, ref } from "vue";
+import { onUnmounted } from "vue";
 
 onUnmounted(() => {
   //刪除users_in_the_room事件監聽(避免事件重複觸發)
-  Meeting.socket.removeListener("users_in_the_room");
+  // Meeting.socket.removeListener("users_in_the_room");
+  //銷毀時關閉socket(避免事件重複觸發)
+  socket.off()
 });
 
 const router = useRouter();
 const Meeting = useMeetingData();
-
 const socket = Meeting.socket;
-console.dir(Meeting.socket);
+
 if (!Meeting.socket.auth) {
+  // socket.off()
   router.push({ path: "/" });
 } else {
   Meeting.socket.connect();

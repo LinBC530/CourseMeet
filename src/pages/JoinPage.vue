@@ -17,7 +17,6 @@ if (!store.haveUserData()) {
     userID: store.userID,
     userName: store.userName,
   };
-  // Meeting.socket.connect()
 }
 </script>
 

@@ -5,6 +5,7 @@ const http = require("http").Server(app);
 const io = require("socket.io")(http);
 const cors = require("cors");
 const multer = require("multer");
+const path = require("path");
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 3000;
 
@@ -12,6 +13,7 @@ http.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
+// app.use(express.static(path.resolve('../dist/spa')));
 //啟用所有CORS請求
 app.use(cors());
 
@@ -28,9 +30,11 @@ app.post("/newAccount", express.json(), async (req, res) => {
   res.send(await DB.setUserData(req.body.Name, req.body.Email, req.body.Pwd));
 });
 //修改帳戶資料
-// app.put("/changeAccountData", express.json(), async (req, res) => {
-//   JSON.stringify(req.body);
-// });
+app.patch("/changeAccountData", express.json(), async (req, res) => {
+  JSON.stringify(req.body);
+  DB.updateUserData(req.body.userID, req.body.pwd, req.body.data);
+  res.send({ type: true, data: 123 });
+});
 
 //接收檔案之格式處理
 //存至硬碟

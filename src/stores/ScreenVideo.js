@@ -3,64 +3,69 @@ import { LocalStream, Client } from "ion-sdk-js";
 
 export const useScreenVideo = defineStore("counter", {
   state: () => ({
-    // userName: null,
     isPub: false,
     sub_video: null,
     pub_video: null,
-    // LocalStream: null,
+    sub_video_userMedia: null,
+    pub_video_userMedia: null,
     client: null,
-    local: null,
+    userMedia: null,
+    displayMedia: null,
   }),
-  persist: true,
+  persist: false,
   getters: {},
   actions: {
-    ONmic() {
-      this.local.mute();
+    // 聲音開關
+    soundSwitch(isMute) {
+      if (isMute) this.userMedia.unmute(); //取消靜音
+      else this.userMedia.mute(); //靜音
     },
-    startPublish(type) {
-      this.isPub = true;
-      if (type) {
-        LocalStream.getUserMedia({
-          resolution: "vga",
-          audio: true,
-          codec: "vp8",
-        })
-          .then((stream) => {
-            this.pub_video.srcObject = stream;
-            this.client.publish(stream);
-          })
-          .catch(console.error);
-      } else {
-        LocalStream.getDisplayMedia({
-          // resolution: "vga",
-          video: true,
-          audio: true,
-          // codec: "vp8",
-        })
-          .then((stream) => {
-            this.pub_video.srcObject = stream;
-            this.client.publish(stream);
-          })
-          .catch(console.error);
-      }
-    },
-    getUserMedia() {
-      this.local = LocalStream.getUserMedia({
+    // 取得目前設備之鏡頭及麥克風
+    async getUserMedia() {
+      this.userMedia = await LocalStream.getUserMedia({
         resolution: "vga",
         video: true,
-        audio: true,
+        audio: false,
         codec: "vp8",
-      }).catch((err) => console.log(err));
+      }).catch(() => null);
     },
-    set_sub_video_src() {
-      if (this.local)
-        this.local
-          .then((stream) => {
-            this.sub_video.srcObject = stream;
-            this.sub_video.autoplay = true;
-            this.sub_video.muted = false;
-          })
-          .catch(console.error);
+    set_sub_video_src(isOpen) {
+      if (isOpen && this.userMedia) {
+        this.sub_video_userMedia.srcObject = this.userMedia;
+        this.sub_video_userMedia.autoplay = true;
+        // this.userMedia.type = "userMedia"
+        console.dir(this.userMedia)
+        this.client.publish(this.userMedia);
+        this.sub_video = null;
+      } else if (!isOpen && this.userMedia) {
+        this.sub_video_userMedia.srcObject = null;
+        this.userMedia.unpublish();
+      }
+    },
+    async set_Pub_video_src(isOpen) {
+      if (isOpen) {
+        this.isPub = true;
+        this.displayMedia = await LocalStream.getDisplayMedia({
+          resolution: "vga",
+          video: true,
+          // audio: true,
+          codec: "vp8",
+        });
+
+        this.pub_video.srcObject = this.displayMedia;
+        this.client.publish(this.displayMedia);
+        console.dir(this.displayMedia)
+      } else {
+        this.pub_video.srcObject = null;
+        this.displayMedia.getTracks().forEach((track) => {
+          track.stop();
+        });
+        this.isPub = false;
+        this.displayMedia.unpublish();
+      }
+    },
+    joinRoom() {
+      this.client.join("test room");
     },
   },
 });

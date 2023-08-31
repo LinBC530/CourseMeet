@@ -3,7 +3,6 @@ import { ref, reactive } from "vue";
 import Talk from "./Talk.vue";
 import Member from "./Member.vue";
 import MeetingMinutes from "./MeetingMinutes.vue";
-import Account from "./Account.vue"
 const navSwitchType = ref(false);
 
 //工具是否啟用(預設狀態)
@@ -80,7 +79,6 @@ function ToolOnClick(obj) {
       <Talk v-show="show.charRoom" />
       <Member v-show="show.memberList" />
       <MeetingMinutes v-show="show.meetingMinutes" />
-      <Account v-show="show.userAccount" />
     </div>
     <div id="nav" @click="navSwitchType = !navSwitchType">
       <div class="memberList" id="memberList_Button" @click="ToolOnClick">

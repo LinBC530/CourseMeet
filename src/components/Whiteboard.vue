@@ -3,236 +3,330 @@ import { useRouter } from "vue-router";
 import io from "socket.io-client";
 import { reactive, ref, onMounted } from "vue";
 
-const copyrouter = useRouter();
-var toolBtns = document.querySelectorAll(".tool");
-const socket = io("http://localhost:3000", { transports: ['websocket'] });
+const router = useRouter();
+// const socket = io("http://localhost:3000", { transports: ["websocket"] });
 
-
-
-function WhiteBoard() {
-  copyrouter.push({ path: "/" });
+function WhiteBoard2() {
+  router.push({ path: "/" });
 }
 
+let fillColor, colorPicker;
 
-
-//const socket = io();
-const canvas = ref(null);
-const colors = ref(null)
-var context = null;
-let drawing = false;
-var brushWidth = 5;
-
-// Before the component is mounted, the value
-// of the ref is `null` which is the default
-// value we've specified above.
+const canvas = ref();
+const sizeSlider = ref();
 onMounted(() => {
-  var sizeSlider = document.querySelector("#size-slider");
-  sizeSlider.addEventListener("change", () => brushWidth = sizeSlider.value);
+  ctx = canvas.value.getContext("2d");
+  // toolBtns = document.querySelectorAll(".tool");
+  fillColor = document.querySelector("#fill-color");
+  // sizeSlider = document.querySelector("#size-slider");
+  // colorBtns = document.querySelectorAll(".colors .option");
+  colorPicker = document.querySelector("#color-picker");
 
-  context = canvas.value.getContext('2d');
+  colorPicker.addEventListener("chang", () => {
+    colorPicker.parentElement.style.background = colorPicker.value;
+    colorPicker.parentElement.click();
+  });
 
-  canvas.value.addEventListener('mousedown', onMouseDown, false);
-  canvas.value.addEventListener('mouseup', onMouseUp, false);
-  canvas.value.addEventListener('mouseout', onMouseUp, false);
-  canvas.value.addEventListener('mousemove', throttle(onMouseMove, 10), false);
-
-  //Touch support for mobile devices
-  canvas.value.addEventListener('touchstart', onMouseDown, false);
-  canvas.value.addEventListener('touchend', onMouseUp, false);
-  canvas.value.addEventListener('touchcancel', onMouseUp, false);
-  canvas.value.addEventListener('touchmove', throttle(onMouseMove, 10), false);
-  for (var i = 0; i < colors.value.children.length; i++) {
-    colors.value.children[i].addEventListener('click', onColorUpdate, false);
-  }
-  onResize();
+  canvas.value.addEventListener("mousedown", startDraw);
+  canvas.value.addEventListener("mousemove", drawing);
+  canvas.value.addEventListener("mouseup", () => (isDrawing = false));
 });
+var ctx;
 
+let prevMouseX, prevMouseY, snapshot;
+let isDrawing = false;
+let selectedTool = "brush";
+// let brushWidth = 5;
+let selectedColor = "#000";
 
-
-var current = {
-  color: 'black'
+window.addEventListener("load", () => {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+});
+//畫長方形
+const drawRect = (e) => {
+  if (!fillColor.checked) {
+    return ctx.strokeRect(
+      e.offsetX,
+      e.offsetY,
+      prevMouseX - e.offsetX,
+      prevMouseY - e.offsetY
+    );
+  }
+  ctx.fillRect(
+    e.offsetX,
+    e.offsetY,
+    prevMouseX - e.offsetX,
+    prevMouseY - e.offsetY
+  );
+};
+//畫圓形
+const drawCircle = (e) => {
+  ctx.beginPath();
+  let radius = Math.sqrt(
+    Math.pow(prevMouseX - e.offsetX, 2) + Math.pow(prevMouseY - e.offsetY, 2)
+  );
+  ctx.arc(prevMouseX, prevMouseY, radius, 0, 2 * Math.PI);
+  fillColor.checked ? ctx.fill() : ctx.stroke();
+};
+//畫三角形
+const drawTriangle = (e) => {
+  ctx.beginPath();
+  ctx.moveTo(prevMouseX, prevMouseY);
+  ctx.lineTo(e.offsetX, e.offsetY);
+  ctx.lineTo(prevMouseX * 2 - e.offsetX, e.offsetY);
+  ctx.closePath();
+  fillColor.checked ? ctx.fill() : ctx.stroke();
 };
 
-socket.on('drawing', onDrawingEvent);
+const startDraw = () => {
+  isDrawing = true;
+  prevMouseX = e.offsetX;
+  prevMouseY = e.offsetY;
+  ctx.beginPath();
+  ctx.lineWidth = sizeSlider.value;
+  ctx.strokeStyle = selectedColor;
+  ctx.fillStyle = selectedColor;
+  snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+};
+const drawing = (e) => {
+  if (!isDrawing) return;
+  ctx.putImageData(snapshot, 0, 0);
+  if (selectedTool === "brush" || selectedTool === "earaser") {
+    context.strokeStyle = selectedTool === "eraser" ? "#fff" : selectedColor;
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+  } else if (selectedTool === "rectangle") {
+    drawRect(e);
+  } else if (selectedTool === "circle") {
+    drawCircle(e);
+  } else {
+    drawTriangle(e);
+  }
+};
 
-window.addEventListener('resize', onResize, false);
-
-
-
-function drawLine(x0, y0, x1, y1, color, emit) {
-  console.log(x0, y0, x1, y1, color)
-  context.beginPath();
-  context.moveTo(x0, y0);
-  context.lineTo(x1, y1);
-  context.strokeStyle = color;
-  context.lineWidth = brushWidth;
-  context.stroke();
-  context.closePath();
-
-  if (!emit) { return; }
-  var w = canvas.value.width;
-  var h = canvas.value.height;
-
-  socket.emit('drawing', {
-    x0: x0 / w,
-    y0: y0 / h,
-    x1: x1 / w,
-    y1: y1 / h,
-    color: color
-
-  });
+// console.dir(toolBtns)
+function toolBtnOnClick() {
+  document.querySelector(".options .active").classList.remove("active");
+  btn.classList.add("active");
+  selectedTool = btn.id;
+  console.log(selectedTool);
 }
+// toolBtns.forEach((btn) => {
+//   btn.addEventListener("click", () => {
+//     document.querySelector(".options .active").classList.remove("active");
+//     btn.classList.add("active");
+//     selectedTool = btn.id;
+//     console.log(selectedTool);
+//   });
+// });
 
-function onMouseDown(e) {
-  console.log(e)
-  drawing = true;
-  current.x = e.clientX || e.touches[0].clientX;
-  current.y = e.clientY || e.touches[0].clientY;
+// sizeSlider.addEventListener("change", () => (brushWidth = sizeSlider.value));
+
+function colcorBtnOnClick() {
+  document.querySelector(".options .selected").classList.remove("selected");
+  btn.classList.add("selected");
+  selectedColor.log(
+    window.getComputedStyle(btn).getPropertyValue("background-color")
+  );
 }
+// colorBtns.forEach((btn) => {
+//   btn.addEventListener("click", () => {
+//     document.querySelector(".options .selected").classList.remove("selected");
+//     btn.classList.add("selected");
+//     selectedColor.log(
+//       window.getComputedStyle(btn).getPropertyValue("background-color")
+//     );
+//   });
+// });
 
-function onMouseUp(e) {
-  if (!drawing) { return; }
-  drawing = false;
-  console.log(e)
-  drawLine(current.x, current.y, e.clientX || e.touches[0].clientX, e.clientY || e.touches[0].clientY, current.color, false);
-}
+// colorPicker.addEventListener("chang", () => {
+//   colorPicker.parentElement.style.background = colorPicker.value;
+//   colorPicker.parentElement.click();
+// });
 
-function onMouseMove(e) {
-  if (!drawing) { return; }
-  drawLine(current.x, current.y, e.clientX || e.touches[0].clientX, e.clientY || e.touches[0].clientY, current.color, true);
-  current.x = e.clientX || e.touches[0].clientX;
-  current.y = e.clientY || e.touches[0].clientY;
-}
-
-function onColorUpdate(e) {
-  current.color = e.target.className.split(' ')[1];
-}
-
-// limit the number of events per second
-function throttle(callback, delay) {
-  var previousCall = new Date().getTime();
-  return function () {
-    var time = new Date().getTime();
-
-    if ((time - previousCall) >= delay) {
-      previousCall = time;
-      callback.apply(null, arguments);
-    }
-  };
-}
-
-function onDrawingEvent(data) {
-  var w = canvas.value.width;
-  var h = canvas.value.height;
-  drawLine(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color);
-}
-
-// make the canvas fill its parent
-function onResize() {
-
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  console.log(canvas.width, canvas.height,);
-}
-///////////
-
-toolBtns.forEach((btn) =>{
-  btn.addEventListener("click", () => {
-    document.querySelector(".options .active").classList.remove("active");
-    btn.classList.add("active");
-    selectedTool = btn.id;
-    console.log(selectedTool);
-  })
-})
-
+// canvas.addEventListener("mousedown", startDraw);
+// canvas.addEventListener("mousemove", drawing);
+// canvas.addEventListener("mouseup", () => (isDrawing = false));
 </script>
 
-<!--            -->
 
 <template>
-
-
-  <canvas class="whiteboard" ref="canvas" width="500" height="500"></canvas>
-
-
-  <div class="row">
-    <label class="title">Options</label>
-    <ul class="options">
-      <li class="opotion tool" id="brush">
-        <img src="" alt="">
-        <span>Brush</span>
-      </li>
-      <li class="opotion tool" id="eraser">
-        <img src="" alt="">
-        <span>Eraser</span>
-      </li>
-      <li class="opotion">
-        <input type="range" id="size-slider" min="1" max="30" value="5">
-      </li>
-
-      <div class="colors" ref="colors">
-        <div class="color black"></div>
-
-        <div class="color red"></div>
-        <div class="color green"></div>
-        <div class="color blue"></div>
-        <div class="color yellow"></div>
-
+  <div class="container">
+    <section class="tools-board">
+      <div class="row">
+        <label class="title">Shapes</label>
+        <ul class="options">
+          <li class="opotion tool" id="rectangle" @click="toolBtnOnClick">
+            <img src="" alt="" />
+            <span>Rectangle</span>
+          </li>
+          <li class="opotion tool" id="circle" @click="toolBtnOnClick">
+            <img src="" alt="" />
+            <span>Circle</span>
+          </li>
+          <li class="opotion tool" id="triangle" @click="toolBtnOnClick">
+            <img src="" alt="" />
+            <span>Triangle</span>
+          </li>
+          <li class="opotion">
+            <input type="checkbox" id="fill-color" />
+            <label for="fill-color">fill color</label>
+          </li>
+        </ul>
       </div>
-    </ul>
+      <div class="row">
+        <label class="title">Options</label>
+        <ul class="options">
+          <li class="opotion active tool" id="brush" @click="toolBtnOnClick">
+            <img src="" alt="" />
+            <span>Brush</span>
+          </li>
+          <li class="opotion tool" id="eraser" @click="toolBtnOnClick">
+            <img src="" alt="" />
+            <span>Eraser</span>
+          </li>
+          <li class="opotion">
+            <!-- <input type="range" id="size-slider" min="1" max="30" value="5" /> -->
+            <q-slider
+              id="size-slider"
+              v-model="sizeSlider"
+              :min="1"
+              :max="30"
+            />
+          </li>
+        </ul>
+      </div>
+      <div class="row colors">
+        <label class="title">Colors</label>
+        <ul class="options" @click="colcorBtnOnClick">
+          <li class="option" @click="colcorBtnOnClick"></li>
+          <li class="option selected" @click="colcorBtnOnClick"></li>
+          <li class="option" @click="colcorBtnOnClick"></li>
+          <li class="option" @click="colcorBtnOnClick"></li>
+          <li class="option" @click="colcorBtnOnClick"></li>
+          <input type="color" id="color-picker" value="#4A98F7" />
+        </ul>
+      </div>
+      <div class="row buttons">
+        <!-- <button class="clear-canvas">Clear Canvas</button>
+                <button class="save-img">Save As Image</button> -->
+      </div>
+    </section>
+    <section class="drawing-board">
+      <canvas ref="canvas"></canvas>
+    </section>
   </div>
 
   <q-card id="msg_box">
-
-    <q-form @submit="WhiteBoard">
-
-    </q-form>
-
+    <q-form @submit="WhiteBoard2"> </q-form>
   </q-card>
 </template>
 
 <style scoped>
-.whiteboard {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: 0;
-  border: 1px solid black;
+.container {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  padding: 10px;
+  max-width: 1050px;
 }
 
+section {
+  background: #fff;
+  border-radius: 7px;
+}
+
+.drawing-board {
+  flex: 1;
+}
+
+.tools-board {
+  widows: 210px;
+  padding: 15px 22px 0;
+}
+
+.tools-board .row {
+  margin-bottom: 20px;
+}
+
+.row .options {
+  list-style: none;
+  cursor: pointer;
+  margin: 10px 0 0 5px;
+}
+
+.row .options .option {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* .options:is(:hover, .active) img {
+    fill: invert(17%) sepia(90%) saturate(3000%) hue-rotate(900deg) brightness(100%) contrast(100%);
+} */
+
+/* .options:is(:hover, .active) :where(span, label) {
+    color: #4A98F7;
+} */
+
+.option :where(span, label) {
+  color: #5a6168;
+  cursor: pointer;
+  padding-left: 10px;
+}
+
+#fill-color:checked ~ label {
+  color: #4a98f7;
+}
+
+.option #fill-color {
+  cursor: pointer;
+  height: 14px;
+  width: 14px;
+}
+
+.colors .options {
+  display: flex;
+  justify-content: space-between;
+}
+
+.colors .option {
+  height: 20px;
+  width: 20px;
+  background: red;
+  border-radius: 50%;
+  margin-top: 3px;
+}
+
+.colors .option:nth-child(1) {
+  background-color: #fff;
+  border: 1px solid #bfbfbf;
+}
+
+.colors .option:nth-child(2) {
+  background-color: #000;
+}
+
+.colors .option:nth-child(3) {
+  background-color: #e02020;
+}
+
+.colors .option:nth-child(4) {
+  background-color: #6dd400;
+}
+
+.colors .option:nth-child(5) {
+  background-color: #4a98f7;
+}
+
+.drawing-board canvas {
+  width: 100%;
+  height: 100%;
+}
 
 .colors {
   position: fixed;
-}
-
-.color {
-  display: inline-block;
-  height: 48px;
-  width: 48px;
-}
-
-.color.black {
-  background-color: black;
-}
-
-.color.red {
-  background-color: red;
-}
-
-.color.green {
-  background-color: green;
-}
-
-.color.blue {
-  background-color: blue;
-}
-
-.color.yellow {
-  background-color: yellow;
-}
-
-.color.white {
-  background-color: white;
 }
 </style>

@@ -4,6 +4,7 @@ module.exports = {
   //user
   setUserData: setUserData,
   getUserData: getUserData,
+  updateUserData: updateUserData,
   //meetingRoom
   creatMeetingRoom: creatMeetingRoom,
   getMeetingRoomData: getMeetingRoomData,
@@ -89,7 +90,11 @@ async function getUserData(email, pwd) {
       if (user.password == data_in.password) {
         data_out.type = true;
         data_out.reason = "";
-        data_out.data = { userID: user._id.toString(), userName: user.name };
+        data_out.data = {
+          userID: user._id.toString(),
+          userName: user.name,
+          userEmail: user.email,
+        };
         return data_out;
       }
       //密碼不相符
@@ -112,6 +117,53 @@ async function getUserData(email, pwd) {
     data_out.type = false;
     data_out.reason = "發生錯誤，請稍後再試";
     data_out.data = null;
+    return data_out;
+  }
+}
+
+async function updateUserData(id, pwd, data) {
+  id = new ObjectId(id);
+  if ("name" in data) data = { name: data.name };
+  else if ("OldPwd" in data && "NewPwd" in data) data = { password: NewPwd };
+  else data = {};
+  //傳回之資料格式
+  const data_out = {
+    type: false,
+    reason: "",
+  };
+  try {
+    const database = client.db("Meet");
+    const Users = database.collection("User");
+    // console.dir(data);
+
+    const account = await Users.findOne({ _id: id, password: pwd });
+    if (account) {
+      // console.dir(data)
+      const result = await Users.updateOne({ _id: id }, { $set: data });
+      // console.dir(account)
+      //收到DB資料
+      if (result) {
+        data_out.type = true;
+        data_out.reason = "";
+        return data_out;
+      }
+      //DB發生錯誤
+      else {
+        data_out.type = false;
+        data_out.reason = "發生錯誤，請稍後再試";
+        return data_out;
+      }
+    }
+    //DB查無資料
+    else {
+      data_out.type = false;
+      data_out.reason = "此信箱已被註冊";
+      return data_out;
+    }
+  } catch {
+    //此方法發生錯誤
+    data_out.type = false;
+    data_out.reason = "發生錯誤，請稍後再試";
     return data_out;
   }
 }
@@ -294,9 +346,11 @@ async function getChatRecord(roomID) {
     const database = client.db("Meet");
     const Meet = database.collection("MeetingRoom");
     const Chat = database.collection("ChatRoom");
-    const ChatRoomID = await (await Meet.findOne({ _id: new ObjectId(roomID) })).ChatRoomID;
+    const ChatRoomID = await (
+      await Meet.findOne({ _id: new ObjectId(roomID) })
+    ).ChatRoomID;
     if (ChatRoomID) {
-      const result = await Chat.findOne({_id: new ObjectId(ChatRoomID)});
+      const result = await Chat.findOne({ _id: new ObjectId(ChatRoomID) });
       //收到DB資料
       if (result) {
         data_out.type = true;

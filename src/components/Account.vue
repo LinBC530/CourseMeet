@@ -8,34 +8,103 @@ import { api } from "../boot/axios";
 const $q = useQuasar();
 const store = useUserData();
 const router = useRouter();
+const err = new Error("server error");
 
+const showLogin = ref(true);
+const checkPwd = ref();
 const user = reactive({
-  Email: store.userEmail,
-  Name: store.userName,
+  Email: null,
+  Name: null,
+});
+const pwd = reactive({
   OldPwd: null,
   NewPwd: null,
 });
 
-function changeAccountData() {
-  if (user.Email && user.Pwd) {
+//檢查密碼並取得用戶資料
+function checkPwdAndGetUserData() {
+  if (checkPwd.value)
     api
-      .post("/changeAccountData", { Name: user.Name })
+      .post("/checkAccount", { Email: store.userEmail, Pwd: checkPwd.value })
       .then((res) => {
         if (res.data) {
           if (res.data.type) {
-            //################
-          } else {
+            user.Email = res.data.data.userEmail;
+            user.Name = res.data.data.userName;
+            showLogin.value = false;
+          } else
             $q.notify({
-              message: res.data.reason,
+              message: "密碼驗證失敗",
               color: "negative",
             });
-          }
-        } else {
-          $q.notify({
-            message: "發生錯誤，請稍後再試",
-            color: "negative",
-          });
-        }
+        } else throw err;
+      })
+      .catch((e) => {
+        console.log(e);
+        $q.notify({
+          message: "發生錯誤，請稍後再試",
+          color: "negative",
+        });
+      });
+  else
+    $q.notify({
+      message: "請輸入密碼",
+      color: "negative",
+    });
+}
+
+//修改用戶資料
+function changeAccountData() {
+  console.dir(true);
+  if (user.Email && user.Name) {
+    api
+      .patch("/changeAccountData", {
+        userID: store.userID,
+        pwd: checkPwd.value,
+        data: { name: user.Name },
+      })
+      .then((res) => {
+        if (res.data) {
+          if (res.data.type) {
+            $q.notify({
+              message: "更新成功",
+              color: "negative",
+            });
+          } else throw err;
+        } else throw err;
+      })
+      .catch((e) => {
+        console.log(e);
+        $q.notify({
+          message: "發生錯誤，請稍後再試",
+          color: "negative",
+        });
+      });
+  }
+}
+
+//修改密碼
+function changePwd() {
+  if (pwd.OldPwd && pwd.NewPwd) {
+    if (pwd.OldPwd == pwd.NewPwd) {
+      $q.notify({
+        message: "舊密碼不可與新密碼相同",
+        color: "negative",
+      });
+      return;
+    }
+    api
+      .patch("/changePwd", {
+        userID: store.userID,
+        oldPwd: pwd.OldPwd,
+        newPwd: pwd.NewPwd,
+      })
+      .then((res) => {
+        if (res.data) {
+          if (res.data.type) {
+            //###############
+          } else throw err;
+        } else throw err;
       })
       .catch((e) => {
         console.log(e);
@@ -49,6 +118,33 @@ function changeAccountData() {
 </script>
 
 <template>
+  <q-dialog v-model:model-value="showLogin" persistent>
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">請輸入密碼</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        <q-input label="pwd" v-model="checkPwd" />
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn
+          flat
+          label="確認"
+          color="primary"
+          @click="checkPwdAndGetUserData"
+        />
+        <q-btn
+          flat
+          label="取消"
+          color="primary"
+          @click="router.push({ path: '/' })"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
   <q-card id="loginPage">
     <q-btn id="backBtn" icon="arrow_back" @click="router.push({ path: '/' })" />
     <q-card-section>

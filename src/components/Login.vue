@@ -49,7 +49,7 @@ function sendAccountData() {
         .then((res) => {
           if (res.data) {
             if (res.data.type) {
-              store.setUserData(res.data.data.userID, res.data.data.userName);
+              store.setUserData(res.data.data.userID, res.data.data.userName, res.data.data.userEmail);
               router.push({ path: "/" });
             } else {
               $q.notify({

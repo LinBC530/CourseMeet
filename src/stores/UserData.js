@@ -9,9 +9,10 @@ export const useUserData = defineStore("UserData", {
   persist: true,
   getters: {},
   actions: {
-    setUserData(id, name) {
+    setUserData(id, name, email) {
       this.userID = id;
       this.userName = name;
+      this.userEmail = email;
     },
     haveUserData() {
       if (this.userID && this.userName) return true;

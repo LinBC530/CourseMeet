@@ -3,6 +3,7 @@ import UserTool from "src/components/UserTool.vue";
 import View from "src/components/View.vue";
 import call_Nav from "src/components/call_Nav.vue";
 import { useMeetingData } from "src/stores/Meeting";
+import { useScreenVideo } from "src/stores/ScreenVideo";
 import { useRouter } from "vue-router";
 import { onUnmounted } from "vue";
 
@@ -11,10 +12,13 @@ onUnmounted(() => {
   // Meeting.socket.removeListener("users_in_the_room");
   //銷毀時關閉socket(避免事件重複觸發)
   socket.off()
+  //銷毀時清除視訊相關資料
+  ScreenVideo.$reset();
 });
 
 const router = useRouter();
 const Meeting = useMeetingData();
+const ScreenVideo = useScreenVideo();
 const socket = Meeting.socket;
 
 if (!Meeting.socket.auth) {

@@ -6,6 +6,7 @@ export const useMeetingData = defineStore("useMeetingData", {
     socket: io("http://localhost:3000", { transports: ["websocket"], autoConnect: false }),
     teacher: "null",
     studens: [],
+    RoomID: null,
   }),
   persist: false,
   getters: {},

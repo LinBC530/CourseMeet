@@ -23,6 +23,7 @@ function joinMeetingRoom() {
         if (res.data) {
           if (res.data.type) {
             Meeting.socket.auth["RoomID"] = MeetingRoomID.value;
+            Meeting.RoomID = MeetingRoomID.value
             router.push({ path: "/Main" });
           } else {
             $q.notify({

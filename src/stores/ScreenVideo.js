@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { LocalStream, Client } from "ion-sdk-js";
+import { useMeetingData } from "./Meeting";
 
+const Meeting = useMeetingData();
 export const useScreenVideo = defineStore("counter", {
   state: () => ({
     isPub: false,
@@ -80,7 +82,7 @@ export const useScreenVideo = defineStore("counter", {
       }
     },
     joinRoom() {
-      this.client.join("test room");
+      this.client.join(Meeting.RoomID);
     },
   },
 });

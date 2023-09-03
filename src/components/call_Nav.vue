@@ -1,11 +1,13 @@
 <script setup>
 import { useScreenVideo } from "src/stores/ScreenVideo";
+import { useMeetingData } from "src/stores/Meeting";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { ref } from "vue";
 
 const $q = useQuasar();
 const store = useScreenVideo();
+const Meeting = useMeetingData();
 const router = useRouter();
 const mic_isOpen = ref(false);
 const cam_isOpen = ref(false);
@@ -52,6 +54,9 @@ function ShareScreenButtonOnClick() {
           color="black"
         ></q-icon>
       </button>
+      <div id="RoomID">
+        <span>會議代碼: {{ Meeting.RoomID }}</span>
+      </div>
       <!-- <button class="btn" id="web">
         <q-icon
           class="material-symbols-outlined"
@@ -140,6 +145,11 @@ function ShareScreenButtonOnClick() {
   display: flex;
   align-items: center;
   border: 2pt solid rgb(132, 0, 139);
+}
+#RoomID {
+  width: 100%;
+  text-align: center;
+  font-size: 20px;
 }
 .btn {
   height: 50px;

@@ -7,8 +7,9 @@ const store = useScreenVideo();
 
 const sub_video = ref();
 const pub_video = ref();
-const sub_video_userMedia = ref();
-const pub_video_userMedia = ref();
+const isPub = ref(false);
+// const sub_video_userMedia = ref();
+// const pub_video_userMedia = ref();
 const Streams = reactive({
   userMider: [],
   displayMider: [],
@@ -23,49 +24,32 @@ signal.onopen = () => {
 onMounted(() => {
   store.sub_video = sub_video;
   store.pub_video = pub_video;
-  store.sub_video_userMedia = sub_video_userMedia;
-  store.pub_video_userMedia = pub_video_userMedia;
   store.client = client;
   console.dir(client);
 
-  // store.joinRoom();
-  // console.dir(client);
-  // const dc = store.client.createDataChannel("data");
-  // dc.onopen = () => {
-  //   dc.send("hello world");
-  //   console.dir(dc);
-  //   store.client.ondatachannel = (e) => {
-  //     console.dir(e);
-  //     e.channel.onmessage = (e) => {
-  //       console.dir("msg");
-  //       // this.mySpeakingCallback(JSON.parse(e.data));
-  //     };
-  //   };
-  // };
+  // store.getUserMedia();
 
-  store.getUserMedia();
-
+  // 本機端未分享畫面時等待track被調用
   if (!store.isPub) {
-
-    client.onactivelayer = (a) => {console.dir(a)}
-
     client.ontrack = (track, stream) => {
-      Streams.userMider.push({media: stream, active: stream.active});
+      // Streams.userMider.push({media: stream, active: stream.active});
 
-      // stream.no = Streams.userMider.length - 1
-      console.dir(stream)
-      // store.sub_video.srcObject = stream;
-      // store.sub_video.autoplay = true;
-      // store.sub_video.muted = false;
+      // 將正在分享之畫面停止播放及停止分享
+      if (store.isPub) store.stop_pub_video_src();
+
+      // 設置接收到的影像
+      store.sub_video.srcObject = stream;
+      store.sub_video.autoplay = true;
+
+      // track被移除時停止顯示畫面
       stream.onremovetrack = () => {
-
-        // Streams.userMider.splice(stream.no,1)
-        // store.sub_video.srcObject = null;
-        console.dir("removetrack");
+        store.sub_video.srcObject = null;
+        // console.dir("removetrack")
       };
-      stream.oninactive = () => {
-
-      }
+      // stream.oninactive = () => {
+      //   store.sub_video.srcObject = null;
+      //   console.dir("inactive");
+      // };
     };
   }
 });

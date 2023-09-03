@@ -70,6 +70,7 @@ function judgmentDataType(msg) {
       });
       break;
     case "file":
+      console.dir(msg)
       messages.push({
         dataType: "file",
         userName: msg.sender,

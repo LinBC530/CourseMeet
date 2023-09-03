@@ -27,14 +27,14 @@ function raisedHand() {
     position: "bottom-right",
   });
 }
-function VideoCamButtonOnClick() {
-  cam_isOpen.value = !cam_isOpen.value;
-  store.set_sub_video_src(cam_isOpen.value);
-}
-function MicButtonOnClick() {
-  mic_isOpen.value = !mic_isOpen.value;
-  store.soundSwitch(mic_isOpen.value);
-}
+// function VideoCamButtonOnClick() {
+//   cam_isOpen.value = !cam_isOpen.value;
+//   store.set_sub_video_src(cam_isOpen.value);
+// }
+// function MicButtonOnClick() {
+//   mic_isOpen.value = !mic_isOpen.value;
+//   store.soundSwitch(mic_isOpen.value);
+// }
 function ShareScreenButtonOnClick() {
   ShareScreen_isOpen.value = !ShareScreen_isOpen.value;
   store.set_Pub_video_src(ShareScreen_isOpen.value);
@@ -71,7 +71,7 @@ function ShareScreenButtonOnClick() {
       </button>
     </div>
     <div id="right">
-      <button class="btn" id="VideoCam" @click="VideoCamButtonOnClick">
+      <!-- <button class="btn" id="VideoCam" @click="VideoCamButtonOnClick">
         <q-icon
           class="material-symbols-outlined"
           :name="cam_isOpen ? 'videocam' : 'videocam_off'"
@@ -88,7 +88,7 @@ function ShareScreenButtonOnClick() {
           size="36px"
           color="black"
         ></q-icon>
-      </button>
+      </button> -->
       <button class="btn" id="Present" @click="ShareScreenButtonOnClick">
         <q-icon
           class="material-symbols-outlined"

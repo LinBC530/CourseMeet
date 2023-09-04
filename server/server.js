@@ -133,27 +133,20 @@ io.on("connection", async (socket) => {
 
   //傳送訊息給所有用戶並儲存訊息
   socket.on("sendMessage", (msg) => {
-    console.log(
-      "type: " +
-        msg.dataType +
-        "\nname: " +
-        msg.sender +
-        "\nmessage: " +
-        msg.content
-    );
     // msg = {
     //   dataType: msg.dataType,
     //   sender: socket.handshake.auth.userName,
     //   content: msg.content,
     // };
     //紀錄聊天訊息
-    DB.setChatRecord(
-      new ObjectId(socket.handshake.auth.RoomID),
-      msg.dataType,
-      socket.handshake.auth.userID,
-      socket.handshake.auth.userName,
-      msg.content
-    );
+    msg.senderID = socket.handshake.auth.userID
+    console.dir(msg)
+    DB.setChatRecord(new ObjectId(socket.handshake.auth.RoomID),msg)
+    //   msg.dataType,
+    //   socket.handshake.auth.userID,
+    //   socket.handshake.auth.userName,
+    //   msg.content
+    // );
     io.to(socket.handshake.auth.RoomID).emit("sendMessage", msg);
   });
 

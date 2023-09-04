@@ -287,7 +287,7 @@ async function creatChatRoom() {
 }
 
 //儲存聊天紀錄
-async function setChatRecord(roomID, dataType, userID, userName, msg) {
+async function setChatRecord(roomID, message) {
   //傳回之資料格式
   const data_out = {
     type: false,
@@ -298,17 +298,17 @@ async function setChatRecord(roomID, dataType, userID, userName, msg) {
     const Meet = database.collection("MeetingRoom");
     const chat = database.collection("ChatRoom");
     //傳入之部分資料打包
-    const data_in = {
-      dataType: dataType,
-      senderID: userID,
-      sender: userName,
-      content: msg,
-    };
+    // const data_in = {
+    //   dataType: dataType,
+    //   senderID: userID,
+    //   sender: userName,
+    //   content: msg,
+    // };
     const ChatRoomID = await (await Meet.findOne({ _id: roomID })).ChatRoomID;
     if (ChatRoomID) {
       const result = await chat.updateOne(
         { _id: new ObjectId(ChatRoomID) },
-        { $push: { Messages: data_in } }
+        { $push: { Messages: message } }
       );
       //收到DB資料
       if (result.matchedCount) {

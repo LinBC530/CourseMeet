@@ -147,7 +147,7 @@ function signOut() {
             label="RoomID"
             v-if="join"
           />
-          <div v-else>
+          <div id="RoomID" v-else>
             <span>會議代碼: {{ MeetingRoomID }}</span>
           </div>
         </div>
@@ -226,6 +226,11 @@ form {
   width: 80%;
   margin-left: auto;
   margin-right: auto;
+}
+#RoomID{
+  margin: 10px 0px;
+  text-align: center;
+  font-size: 18px;
 }
 #btn {
   height: 20%;

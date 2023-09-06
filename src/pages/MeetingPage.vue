@@ -58,24 +58,20 @@ socket.on("users_in_the_room", (users) => {
 
 #tool {
   height: 100%;
-  border: 1pt solid red;
 }
 #view,
 #CourseMenu,
 #Meeting {
   height: 100%;
   width: 100%;
-  border: 1pt solid blue;
 }
 #MeetingContent {
   height: 90%;
   width: 100%;
-  border: 3pt solid red;
 }
 #MeetingCallNav {
   height: 10%;
   width: 100%;
-  border: 3pt solid rgb(34, 0, 255);
 }
 #exit {
   height: 100%;

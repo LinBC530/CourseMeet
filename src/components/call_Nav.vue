@@ -1,6 +1,7 @@
 <script setup>
 import { useScreenVideo } from "src/stores/ScreenVideo";
 import { useMeetingData } from "src/stores/Meeting";
+import { useUserData } from "src/stores/UserData";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { ref } from "vue";
@@ -8,10 +9,12 @@ import { ref } from "vue";
 const $q = useQuasar();
 const store = useScreenVideo();
 const Meeting = useMeetingData();
+const UserData = useUserData();
 const router = useRouter();
+const socket = Meeting.socket;
 const mic_isOpen = ref(false);
 const cam_isOpen = ref(false);
-const ShareScreen_isOpen = ref(false)
+const ShareScreen_isOpen = ref(false);
 
 function end() {
   router.push({ path: "/Exit" });
@@ -28,6 +31,11 @@ function raisedHand() {
     color: "purple",
     position: "bottom-right",
   });
+  socket.emit("sendMessage", {
+    dataType: "SystemMsg",
+    sender: UserData.userName,
+    content: UserData.userName+"舉手",
+  });
 }
 // function VideoCamButtonOnClick() {
 //   cam_isOpen.value = !cam_isOpen.value;
@@ -40,6 +48,15 @@ function raisedHand() {
 function ShareScreenButtonOnClick() {
   ShareScreen_isOpen.value = !ShareScreen_isOpen.value;
   store.set_Pub_video_src(ShareScreen_isOpen.value);
+}
+function RoomID_OnClick() {
+  navigator.clipboard.writeText(Meeting.RoomID).then(() => {
+    $q.notify({
+      message: "已複製會議代碼",
+      color: "purple",
+      position: "bottom",
+    });
+  });
 }
 </script>
 
@@ -55,7 +72,7 @@ function ShareScreenButtonOnClick() {
         ></q-icon>
       </button>
       <div id="RoomID">
-        <span>會議代碼: {{ Meeting.RoomID }}</span>
+        <span @click="RoomID_OnClick">{{ Meeting.RoomID }}</span>
       </div>
       <!-- <button class="btn" id="web">
         <q-icon
@@ -129,7 +146,6 @@ function ShareScreenButtonOnClick() {
   width: 45%;
   display: flex;
   align-items: center;
-  border: 2pt solid rgb(0, 120, 139);
 }
 #center {
   height: 100%;
@@ -137,19 +153,20 @@ function ShareScreenButtonOnClick() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2pt solid rgb(0, 139, 49);
 }
 #right {
   height: 100%;
   width: 45%;
   display: flex;
   align-items: center;
-  border: 2pt solid rgb(132, 0, 139);
 }
 #RoomID {
   width: 100%;
   text-align: center;
   font-size: 20px;
+}
+#RoomID span:hover {
+  cursor: pointer;
 }
 .btn {
   height: 50px;
@@ -165,6 +182,7 @@ function ShareScreenButtonOnClick() {
   fill: rgb(50, 50, 50);
 }
 .btn:hover {
+  cursor: pointer;
   background-color: rgb(205, 205, 205);
 }
 #end_Call {

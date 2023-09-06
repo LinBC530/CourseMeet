@@ -5,7 +5,7 @@ import { useUserData } from "src/stores/UserData";
 import { api } from "../boot/axios";
 import { useQuasar } from "quasar";
 
-const store = useUserData()
+const store = useUserData();
 const Meeting = useMeetingData();
 const $q = useQuasar();
 const socket = Meeting.socket;
@@ -70,13 +70,21 @@ function judgmentDataType(msg) {
       });
       break;
     case "file":
-      console.dir(msg)
+      console.dir(msg);
       messages.push({
         dataType: "file",
         userName: msg.sender,
         fileName: msg.fileName,
         message: msg.content,
         sent: !(store.userName == msg.sender),
+      });
+      break;
+    case "SystemMsg":
+      messages.push({
+        dataType: "SystemMsg",
+        userName: 'System',
+        message: msg.content,
+        sent: true,
       });
       break;
     default:
@@ -187,14 +195,22 @@ function getFile(fileID, fileName) {
   <div id="talk-main">
     <div id="output">
       <div id="messages" style="padding: 5pt" v-for="msg in messages">
-        <q-chat-message :name="msg.userName" :sent="msg.sent">
-          <div v-if="msg.dataType == 'msg' || msg.dataType == 'img'" v-html="msg.message" />
+        <q-chat-message
+          :name="msg.userName"
+          :sent="msg.sent"
+          :bg-color="msg.dataType == 'SystemMsg' ? 'orange-5' : null"
+        >
+          <div
+            v-if="msg.dataType == 'msg' || msg.dataType == 'img' || msg.dataType == 'SystemMsg'"
+            v-html="msg.message"
+          />
+          <!-- <div v-if="msg.dataType == 'SystemMsg'" v-html="msg.userName" /> -->
           <div
             v-if="msg.dataType == 'file'"
             class="file"
             @click="getFile(msg.message, msg.fileName)"
           >
-            <span>{{msg.fileName}}</span>
+            <span>{{ msg.fileName }}</span>
             <q-icon name="download" />
           </div>
         </q-chat-message>
@@ -226,7 +242,6 @@ function getFile(fileID, fileName) {
   overflow-wrap: break-word;
   overflow-y: scroll;
   overflow-x: hidden;
-  background-color: rgb(235, 235, 235);
   border-radius: 10pt;
 }
 
@@ -280,7 +295,7 @@ form {
   border: 0pt;
   border-radius: 30pt;
   font-size: large;
-  background-color: rgb(195, 195, 195);
+  background-color: rgb(223, 223, 223);
   padding-left: 15pt;
 }
 
@@ -290,7 +305,7 @@ form {
   margin-left: 1%;
   border: 0pt;
   border-radius: 100%;
-  color: rgb(61, 61, 61);
+  color: rgb(35, 105, 167);
   background-color: rgba(0, 0, 0, 0);
   display: flex;
   align-items: center;

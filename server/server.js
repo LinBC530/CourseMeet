@@ -32,8 +32,9 @@ app.post("/newAccount", express.json(), async (req, res) => {
 //修改帳戶資料
 app.patch("/changeAccountData", express.json(), async (req, res) => {
   JSON.stringify(req.body);
-  DB.updateUserData(req.body.userID, req.body.pwd, req.body.data);
-  res.send({ type: true, data: 123 });
+  // DB.updateUserData(req.body.userID, req.body.pwd, req.body.data);
+  // res.send({ type: true, data: 123 });
+  res.send(await DB.updateUserData(req.body.userID, req.body.pwd, req.body.data))
 });
 
 //接收檔案之格式處理
@@ -81,12 +82,6 @@ app.post("/checkMeeting", express.json(), async (req, res) => {
     res.send({ type: true, reason: "" });
   else res.send({ type: false, reason: "查無此會議" });
 });
-
-// app.post("/setChatRecord", express.json(), async (req, res) => {
-//   console.dir(req.method);
-//   console.dir(JSON.stringify(req.body));
-//   res.send(await DB.setChatRecord(new ObjectId(req.body.RoomID), req.body.userID, req.body.msg))
-// });
 
 //取得在會議室中的用戶的資訊
 async function getOnMeetingRoomUsers(RoomID) {

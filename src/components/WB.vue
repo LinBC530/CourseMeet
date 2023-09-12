@@ -28,7 +28,7 @@ const canvas = ref();
           <div class="toolbox tools">
             <q-btn-group unelevated>
               <q-btn size="lg" icon="brush" stack />
-              <q-btn size="lg" label="E" stack />
+              <q-btn size="lg" icon="ink_eraser" stack />
               <q-btn size="lg" label="?" stack />
             </q-btn-group>
           </div>

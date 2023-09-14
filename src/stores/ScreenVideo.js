@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { LocalStream, Client } from "ion-sdk-js";
 import { useMeetingData } from "./Meeting";
+import { api } from "../boot/axios";
 
 const Meeting = useMeetingData();
 export const useScreenVideo = defineStore("counter", {
@@ -13,6 +14,7 @@ export const useScreenVideo = defineStore("counter", {
     client: null,
     userMedia: null,
     displayMedia: null,
+    mediaRecorder: null,
   }),
   persist: false,
   getters: {},
@@ -62,9 +64,20 @@ export const useScreenVideo = defineStore("counter", {
         });
         this.pub_video.srcObject = this.displayMedia;
         this.client.publish(this.displayMedia);
+        // 錄製分享畫面
+        this.mediaRecorder = new MediaRecorder(this.displayMedia);
+        this.mediaRecorder.start();
+        this.mediaRecorder.ondataavailable = (e) => {
+          const blob = new Blob([e.data], { type: "video/mp4" });
+          const downloadLink = document.createElement("a");
+          downloadLink.href = window.URL.createObjectURL(blob);
+          downloadLink.download = "videoName";
+          downloadLink.click();
+        };
         this.displayMedia.getTracks().forEach((track) => {
           // 停止分享被點擊時停止分享畫面
           track.onended = () => {
+            this.mediaRecorder.stop();
             console.dir("ended");
             this.pub_video.srcObject = null;
             track.stop();
@@ -73,6 +86,7 @@ export const useScreenVideo = defineStore("counter", {
           };
         });
       } else {
+        this.mediaRecorder.stop();
         this.pub_video.srcObject = null;
         this.displayMedia.getTracks().forEach((track) => {
           track.stop();

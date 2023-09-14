@@ -60,7 +60,7 @@ onMounted(() => {
 <template>
   <div id="View_main">
     <div id="View">
-      <div id="left">
+      <!-- <div id="left"> -->
         <video
           class="displayMider"
           ref="pub_video"
@@ -75,7 +75,7 @@ onMounted(() => {
           controls
           v-show="!store.isPub"
         ></video>
-      </div>
+      <!-- </div>
       <div id="right">
         <div id="right_top">
           <video
@@ -94,7 +94,7 @@ onMounted(() => {
             controls
           ></video>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

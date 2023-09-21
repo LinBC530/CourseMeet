@@ -18,14 +18,12 @@ function getDataType_as_file(msg) {
     return;
   }
   if (msg.dataType == "file") {
-    console.dir(msg);
     messages.value.push({
       dataType: "file",
       userName: msg.sender,
       fileName: msg.fileName,
       message: msg.content,
     });
-    console.dir(messages.value)
   }
 }
 

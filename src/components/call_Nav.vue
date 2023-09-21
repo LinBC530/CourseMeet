@@ -12,8 +12,9 @@ const Meeting = useMeetingData();
 const UserData = useUserData();
 const router = useRouter();
 const socket = Meeting.socket;
-const mic_isOpen = ref(false);
-const cam_isOpen = ref(false);
+// const mic_isOpen = ref(false);
+// const cam_isOpen = ref(false);
+const REC_isOpen = ref(false);
 const ShareScreen_isOpen = ref(false);
 
 function end() {
@@ -26,15 +27,15 @@ function openWhiteBoard() {
   window.open(routeData.href, "_blank");
 }
 function raisedHand() {
-  $q.notify({
-    message: "你舉手",
-    color: "purple",
-    position: "bottom-right",
-  });
+  // $q.notify({
+  //   message: "你舉手",
+  //   color: "purple",
+  //   position: "bottom-right",
+  // });
   socket.emit("sendMessage", {
     dataType: "SystemMsg",
     sender: UserData.userName,
-    content: UserData.userName+"舉手",
+    content: UserData.userName + "舉手",
   });
 }
 // function VideoCamButtonOnClick() {
@@ -45,10 +46,11 @@ function raisedHand() {
 //   mic_isOpen.value = !mic_isOpen.value;
 //   store.soundSwitch(mic_isOpen.value);
 // }
-function ShareScreenButtonOnClick() {
-  ShareScreen_isOpen.value = !ShareScreen_isOpen.value;
-  store.set_Pub_video_src(ShareScreen_isOpen.value);
-}
+// function ShareScreenButtonOnClick() {
+//   // ShareScreen_isOpen.value = !ShareScreen_isOpen.value;
+//   // store.set_Pub_video_src(ShareScreen_isOpen.value);
+//   store.set_Pub_video_src();
+// }
 function RoomID_OnClick() {
   navigator.clipboard.writeText(Meeting.RoomID).then(() => {
     $q.notify({
@@ -58,6 +60,9 @@ function RoomID_OnClick() {
     });
   });
 }
+// function REC_onClick() {
+//   store.REC();
+// }
 </script>
 
 <template>
@@ -111,7 +116,7 @@ function RoomID_OnClick() {
           color="black"
         ></q-icon>
       </button> -->
-      <button class="btn" id="Present" @click="ShareScreenButtonOnClick">
+      <button class="btn" id="Present" @click="store.set_Pub_video_src();">
         <q-icon
           class="material-symbols-outlined"
           name="present_to_all"
@@ -119,6 +124,24 @@ function RoomID_OnClick() {
           color="black"
         ></q-icon>
       </button>
+      <button class="btn" id="REC" @click="store.REC();">
+        <q-icon
+          class="material-symbols-outlined"
+          name="radio_button_checked "
+          :color="store.isREC ? 'red' : 'grey-10'"
+          size="36px"
+          color="black"
+        ></q-icon>
+      </button>
+      <q-dialog v-model="store.isREC" seamless position="top">
+        <q-card style="width: 400px; background-color:rgb(67, 67, 67)">
+          <q-card-section class="row items-center no-wrap">
+              <div style="color: rgb(255, 255, 255);">正在錄製此影像</div>
+            <q-space />
+            <q-btn flat round color="grey-1" icon="close" v-close-popup />
+          </q-card-section>
+        </q-card>
+      </q-dialog>
       <button class="btn" id="raised_hand" @click="raisedHand">
         <q-icon
           class="material-symbols-outlined"

@@ -3,49 +3,65 @@ import { useRouter } from "vue-router";
 import io from "socket.io-client";
 import { reactive, ref, onMounted } from "vue";
 
-const router = useRouter();
-// const socket = io("http://localhost:3000", { transports: ["websocket"] });
+const copyrouter = useRouter();
+const socket = io("http://localhost:3000", { transports: ["websocket"] });
 
 function WhiteBoard2() {
-  router.push({ path: "/" });
+  copyrouter.push({ path: "/" });
 }
 
-let fillColor, colorPicker;
+const canvas = ref(null);
+const toolBtns = ref(null);
+const fillcolor = ref(null);
+const sizeSlider = ref(null);
+const colorBtns = ref(null);
+const colorPicker = ref(null);
+var ctx = null;
 
-const canvas = ref();
-const sizeSlider = ref();
 onMounted(() => {
   ctx = canvas.value.getContext("2d");
-  // toolBtns = document.querySelectorAll(".tool");
-  fillColor = document.querySelector("#fill-color");
-  // sizeSlider = document.querySelector("#size-slider");
-  // colorBtns = document.querySelectorAll(".colors .option");
-  colorPicker = document.querySelector("#color-picker");
-
-  colorPicker.addEventListener("chang", () => {
-    colorPicker.parentElement.style.background = colorPicker.value;
-    colorPicker.parentElement.click();
-  });
-
   canvas.value.addEventListener("mousedown", startDraw);
   canvas.value.addEventListener("mousemove", drawing);
   canvas.value.addEventListener("mouseup", () => (isDrawing = false));
+
+  if (toolBtns.value != null) {
+    for (var i = 0; i < toolBtns.value.children.length; i++) {
+      // console.dir(toolBtns.value.children[i])
+      toolBtns.value.children[i].addEventListener("click", (btn) => {
+        document.querySelector(".options .active").classList.remove("active");
+        console.dir(btn.target.id);
+        btn.target.classList.add("active");
+        // selectedTool = btn.target.id;
+        // console.log(selectedTool);
+      });
+    }
+  }
+
+  if (colorBtns.value != null) {
+  for (var i = 0; i < colorBtns.value.children.length; i++) {
+    colorBtns.value.children[i].addEventListener("click", (btn) => {
+      document.querySelector(".options .selected").classList.remove("selected");
+      btn.target.classList.add("selected");
+      console.log(btn.target.classList)
+      selectedColor = window.getComputedStyle(btn.target).getPropertyValue("background-color")
+    });
+  }
+}
 });
-var ctx;
 
 let prevMouseX, prevMouseY, snapshot;
 let isDrawing = false;
-let selectedTool = "brush";
-// let brushWidth = 5;
+const selectedTool = "brush";
+const brushWidth = 5;
 let selectedColor = "#000";
 
 window.addEventListener("load", () => {
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
+  canvas.value.width = canvas.offsetWidth;
+  canvas.value.height = canvas.offsetHeight;
 });
 //畫長方形
 const drawRect = (e) => {
-  if (!fillColor.checked) {
+  if (!fillcolor.checked) {
     return ctx.strokeRect(
       e.offsetX,
       e.offsetY,
@@ -67,7 +83,7 @@ const drawCircle = (e) => {
     Math.pow(prevMouseX - e.offsetX, 2) + Math.pow(prevMouseY - e.offsetY, 2)
   );
   ctx.arc(prevMouseX, prevMouseY, radius, 0, 2 * Math.PI);
-  fillColor.checked ? ctx.fill() : ctx.stroke();
+  fillcolor.checked ? ctx.fill() : ctx.stroke();
 };
 //畫三角形
 const drawTriangle = (e) => {
@@ -76,28 +92,36 @@ const drawTriangle = (e) => {
   ctx.lineTo(e.offsetX, e.offsetY);
   ctx.lineTo(prevMouseX * 2 - e.offsetX, e.offsetY);
   ctx.closePath();
-  fillColor.checked ? ctx.fill() : ctx.stroke();
+  fillcolor.checked ? ctx.fill() : ctx.stroke();
 };
 
-const startDraw = () => {
+//e.clientX e.clientY
+
+const startDraw = (e) => {
   isDrawing = true;
   prevMouseX = e.offsetX;
   prevMouseY = e.offsetY;
   ctx.beginPath();
-  ctx.lineWidth = sizeSlider.value;
+  ctx.lineWidth = brushWidth;
   ctx.strokeStyle = selectedColor;
   ctx.fillStyle = selectedColor;
-  snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  snapshot = ctx.getImageData(0, 0, canvas.value.width, canvas.value.height);
 };
 const drawing = (e) => {
   if (!isDrawing) return;
   ctx.putImageData(snapshot, 0, 0);
   if (selectedTool === "brush" || selectedTool === "earaser") {
-    context.strokeStyle = selectedTool === "eraser" ? "#fff" : selectedColor;
+    ctx.strokeStyle = selectedTool === "eraser" ? "#fff" : selectedColor;
     ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
+    console.log("游標在白色區塊的位置1");
+    console.log(e.offsetX, e.offsetY);
+    console.log("游標在整個畫面的位置2");
+    console.log(e.clientX, e.clientY);
+    console.log(e.offsetX + e.clientX, e.offsetY + e.clientY);
   } else if (selectedTool === "rectangle") {
     drawRect(e);
+    console.log("a");
   } else if (selectedTool === "circle") {
     drawCircle(e);
   } else {
@@ -105,51 +129,19 @@ const drawing = (e) => {
   }
 };
 
-// console.dir(toolBtns)
-function toolBtnOnClick() {
-  document.querySelector(".options .active").classList.remove("active");
-  btn.classList.add("active");
-  selectedTool = btn.id;
-  console.log(selectedTool);
+if (sizeSlider.value != null) {
+  sizeSlider.addEventListener("change", () => (brushWidth = sizeSlider.value));
 }
-// toolBtns.forEach((btn) => {
-//   btn.addEventListener("click", () => {
-//     document.querySelector(".options .active").classList.remove("active");
-//     btn.classList.add("active");
-//     selectedTool = btn.id;
-//     console.log(selectedTool);
-//   });
-// });
 
-// sizeSlider.addEventListener("change", () => (brushWidth = sizeSlider.value));
-
-function colcorBtnOnClick() {
-  document.querySelector(".options .selected").classList.remove("selected");
-  btn.classList.add("selected");
-  selectedColor.log(
-    window.getComputedStyle(btn).getPropertyValue("background-color")
-  );
+if (colorPicker.value != null) {
+  colorPicker.addEventListener("chang", () => {
+    colorPicker.parentElement.style.background = colorPicker.value;
+    colorPicker.parentElement.click();
+  });
 }
-// colorBtns.forEach((btn) => {
-//   btn.addEventListener("click", () => {
-//     document.querySelector(".options .selected").classList.remove("selected");
-//     btn.classList.add("selected");
-//     selectedColor.log(
-//       window.getComputedStyle(btn).getPropertyValue("background-color")
-//     );
-//   });
-// });
 
-// colorPicker.addEventListener("chang", () => {
-//   colorPicker.parentElement.style.background = colorPicker.value;
-//   colorPicker.parentElement.click();
-// });
 
-// canvas.addEventListener("mousedown", startDraw);
-// canvas.addEventListener("mousemove", drawing);
-// canvas.addEventListener("mouseup", () => (isDrawing = false));
 </script>
-
 
 <template>
   <div class="container">
@@ -157,20 +149,20 @@ function colcorBtnOnClick() {
       <div class="row">
         <label class="title">Shapes</label>
         <ul class="options">
-          <li class="opotion tool" id="rectangle" @click="toolBtnOnClick">
+          <li class="opotion tool" id="rectangle" ref="tool">
             <img src="" alt="" />
             <span>Rectangle</span>
           </li>
-          <li class="opotion tool" id="circle" @click="toolBtnOnClick">
+          <li class="opotion tool" id="circle" ref="tool">
             <img src="" alt="" />
             <span>Circle</span>
           </li>
-          <li class="opotion tool" id="triangle" @click="toolBtnOnClick">
+          <li class="opotion tool" id="triangle" ref="tool">
             <img src="" alt="" />
             <span>Triangle</span>
           </li>
           <li class="opotion">
-            <input type="checkbox" id="fill-color" />
+            <input type="checkbox" id="fill-color" ref="fillcolor" />
             <label for="fill-color">fill color</label>
           </li>
         </ul>
@@ -178,34 +170,40 @@ function colcorBtnOnClick() {
       <div class="row">
         <label class="title">Options</label>
         <ul class="options">
-          <li class="opotion active tool" id="brush" @click="toolBtnOnClick">
+          <li class="opotion active tool" id="brush" ref="tool">
             <img src="" alt="" />
             <span>Brush</span>
           </li>
-          <li class="opotion tool" id="eraser" @click="toolBtnOnClick">
+          <li class="opotion tool" id="eraser" ref="tool">
             <img src="" alt="" />
             <span>Eraser</span>
           </li>
           <li class="opotion">
-            <!-- <input type="range" id="size-slider" min="1" max="30" value="5" /> -->
-            <q-slider
+            <input
+              type="range"
               id="size-slider"
-              v-model="sizeSlider"
-              :min="1"
-              :max="30"
+              ref="sizeSlider"
+              min="1"
+              max="30"
+              value="5"
             />
           </li>
         </ul>
       </div>
       <div class="row colors">
         <label class="title">Colors</label>
-        <ul class="options" @click="colcorBtnOnClick">
-          <li class="option" @click="colcorBtnOnClick"></li>
-          <li class="option selected" @click="colcorBtnOnClick"></li>
-          <li class="option" @click="colcorBtnOnClick"></li>
-          <li class="option" @click="colcorBtnOnClick"></li>
-          <li class="option" @click="colcorBtnOnClick"></li>
-          <input type="color" id="color-picker" value="#4A98F7" />
+        <ul class="options" ref="colorBtns">
+          <li class="option" @="abcd1"></li>
+          <li class="option selected"></li>
+          <li class="option"></li>
+          <li class="option"></li>
+          <li class="option"></li>
+          <input
+            type="color"
+            id="color-picker"
+            ref="colorPicker"
+            value="#4A98F7"
+          />
         </ul>
       </div>
       <div class="row buttons">
@@ -321,6 +319,21 @@ section {
   background-color: #4a98f7;
 }
 
+/* .colors .option:hover::before{
+    position:absolute;
+    content: "";
+    top: 50%;
+    left: 50%;
+    height: 12px;
+    width: 12px;
+    background: inherit;
+    border-radius: inherit;
+    border: 2px solid #fff;
+    transform: translate(-50%, -50%);
+}
+.colors .option:first-child:hover::before{
+    border-color:#ccc;
+} */
 .drawing-board canvas {
   width: 100%;
   height: 100%;

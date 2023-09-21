@@ -6,13 +6,14 @@ import { api } from "../boot/axios";
 const Meeting = useMeetingData();
 export const useScreenVideo = defineStore("counter", {
   state: () => ({
+    isREC: false,
     isPub: false,
     sub_video: null,
     pub_video: null,
-    sub_video_userMedia: null,
-    pub_video_userMedia: null,
+    // sub_video_userMedia: null,
+    // pub_video_userMedia: null,
     client: null,
-    userMedia: null,
+    // userMedia: null,
     displayMedia: null,
     mediaRecorder: null,
   }),
@@ -36,6 +37,7 @@ export const useScreenVideo = defineStore("counter", {
       if (this.displayMedia) {
         this.displayMedia.getTracks().forEach((track) => track.stop());
         this.displayMedia.unpublish();
+        this.displayMedia = null;
         this.pub_video = null;
         this.isPub = false;
       }
@@ -53,45 +55,57 @@ export const useScreenVideo = defineStore("counter", {
     //     this.userMedia.unpublish();
     //   }
     // },
-    async set_Pub_video_src(isOpen) {
-      if (isOpen) {
-        this.isPub = true;
+    REC() {
+      if (!this.isREC && this.displayMedia) {
+        // 錄製分享畫面
+        this.mediaRecorder = new MediaRecorder(this.displayMedia);
+        this.mediaRecorder.start();
+        this.mediaRecorder.ondataavailable = (e) => {
+          // 產生連結自動下載影像
+          const blob = new Blob([e.data], { type: "video/mp4" });
+          const downloadLink = document.createElement("a");
+          downloadLink.href = window.URL.createObjectURL(blob);
+          downloadLink.download = "課程影像";
+          downloadLink.click();
+          this.isREC = false;
+        };
+        this.isREC = true;
+      } else if (this.isREC) {
+        this.mediaRecorder.stop();
+      }
+    },
+    async set_Pub_video_src() {
+      if (!this.isPub) {
         this.displayMedia = await LocalStream.getDisplayMedia({
           resolution: "vga",
           video: true,
           // audio: true,
           codec: "vp8",
         });
+        console.dir(this.displayMedia)
+        this.isPub = true;
         this.pub_video.srcObject = this.displayMedia;
         this.client.publish(this.displayMedia);
-        // 錄製分享畫面
-        this.mediaRecorder = new MediaRecorder(this.displayMedia);
-        this.mediaRecorder.start();
-        this.mediaRecorder.ondataavailable = (e) => {
-          const blob = new Blob([e.data], { type: "video/mp4" });
-          const downloadLink = document.createElement("a");
-          downloadLink.href = window.URL.createObjectURL(blob);
-          downloadLink.download = "videoName";
-          downloadLink.click();
-        };
         this.displayMedia.getTracks().forEach((track) => {
           // 停止分享被點擊時停止分享畫面
           track.onended = () => {
-            this.mediaRecorder.stop();
+            // if (this.isREC) this.mediaRecorder.stop();
             console.dir("ended");
             this.pub_video.srcObject = null;
             track.stop();
             this.displayMedia.unpublish();
+            this.displayMedia = null;
             this.isPub = false;
           };
         });
-      } else {
-        this.mediaRecorder.stop();
+      } else if (this.isPub) {
+        // if (this.isREC) this.mediaRecorder.stop();
         this.pub_video.srcObject = null;
         this.displayMedia.getTracks().forEach((track) => {
           track.stop();
         });
         this.displayMedia.unpublish();
+        this.displayMedia = null;
         this.isPub = false;
       }
     },

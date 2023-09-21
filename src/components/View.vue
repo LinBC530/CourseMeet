@@ -25,7 +25,6 @@ onMounted(() => {
   store.sub_video = sub_video;
   store.pub_video = pub_video;
   store.client = client;
-  console.dir(client);
 
   // store.getUserMedia();
 

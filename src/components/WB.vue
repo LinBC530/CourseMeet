@@ -1,6 +1,9 @@
 <script setup>
 import { ref, reactive, onMounted } from "vue";
+import { useMeetingData } from "src/stores/Meeting";
 
+const Meeting = useMeetingData();
+const socket = Meeting.socket;
 const canvas = ref();
 var context = null;
 let drawing = false;
@@ -25,6 +28,16 @@ onMounted(() => {
   onResize();
 });
 
+function donwload_as_png() {
+  canvas.value.toBlob((blob) => {
+    const link = document.createElement("a");
+    link.innerText = "Download";
+    link.href = URL.createObjectURL(blob);
+    link.download = "whiteBoardPage.png";
+    link.click();
+  });
+}
+
 function drawLine(x0, y0, x1, y1, color, emit) {
   console.log(x0, y0, x1, y1, color, emit);
   context.beginPath();
@@ -37,15 +50,15 @@ function drawLine(x0, y0, x1, y1, color, emit) {
   if (!emit) {
     return;
   }
-  // var w = canvas.value.width;
-  // var h = canvas.value.height;
-  // socket.emit("drawing", {
-  //   x0: x0 / w,
-  //   y0: y0 / h,
-  //   x1: x1 / w,
-  //   y1: y1 / h,
-  //   color: color,
-  // });
+  var w = canvas.value.width;
+  var h = canvas.value.height;
+  socket.emit("drawing", {
+    x0: x0 / w,
+    y0: y0 / h,
+    x1: x1 / w,
+    y1: y1 / h,
+    color: color,
+  });
 }
 
 function eraser(x, y, size) {
@@ -89,6 +102,9 @@ function onMouseUp(e) {
     case "eraser":
       eraser(e.offsetX, e.offsetY, tool.size);
       break;
+    case "Triangle":
+      drawTriangle(e);
+      break;
     default:
       break;
   }
@@ -105,9 +121,9 @@ function onMouseMove(e) {
     case "eraser":
       eraser(e.offsetX, e.offsetY, tool.size);
       break;
-    case "Triangle":
-      drawTriangle(e);
-      break;
+    // case "Triangle":
+    //   drawTriangle(e);
+    //   break;
     default:
       break;
   }
@@ -269,7 +285,12 @@ const drawTriangle = (e) => {
         </q-card-section>
         <q-card-section>
           <center>
-            <q-btn style="width: 80%" color="green" label="Donwload" />
+            <q-btn
+              style="width: 80%"
+              color="green"
+              label="Donwload"
+              @click="donwload_as_png"
+            />
           </center>
         </q-card-section>
       </q-card>

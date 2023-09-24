@@ -1,3 +1,8 @@
+const OpenAI = require("openai").default;
+const openai = new OpenAI({
+  apiKey: "API_KEY",
+});
+// const api = require("axios").default;
 const DB = require("./db_function");
 const express = require("express");
 const app = express();
@@ -5,10 +10,9 @@ const http = require("http").Server(app);
 const io = require("socket.io")(http);
 const cors = require("cors");
 const multer = require("multer");
-const path = require("path");
+// const path = require("path");
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 3000;
-
 http.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
@@ -34,7 +38,9 @@ app.patch("/changeAccountData", express.json(), async (req, res) => {
   JSON.stringify(req.body);
   // DB.updateUserData(req.body.userID, req.body.pwd, req.body.data);
   // res.send({ type: true, data: 123 });
-  res.send(await DB.updateUserData(req.body.userID, req.body.pwd, req.body.data))
+  res.send(
+    await DB.updateUserData(req.body.userID, req.body.pwd, req.body.data)
+  );
 });
 
 //接收檔案之格式處理
@@ -82,6 +88,33 @@ app.post("/checkMeeting", express.json(), async (req, res) => {
     res.send({ type: true, reason: "" });
   else res.send({ type: false, reason: "查無此會議" });
 });
+//傳送訊息至openAI
+// app.post("/AI/GPT", express.json(), async (req, res) => {
+//   console.dir(req.method);
+//   JSON.stringify(req.body);
+// res.send((await DB.getChatRecord(socket.handshake.auth.RoomID)).data)
+// res.send(
+//   await openai.chat.completions.create({
+//     model: "gpt-3.5-turbo",
+//     messages: [
+//       {role: "user" , content: "說'這是一隻貓'"},
+//       {role: "assistant", content: "這是一隻貓"},
+//       { role: "user", content: "剛剛的談話內容是甚麼?" }
+//     ],
+//   })
+// );
+// });
+
+// async function GPT() {
+//   const response = await openai.chat.completions.create({
+//     model: "gpt-3.5-turbo",
+//     messages: [
+//       { role: "user", content: "回應'這是一個測試'" },
+//     ],
+//   });
+
+//   return response.choices[0].message.content;
+// }
 
 //取得在會議室中的用戶的資訊
 async function getOnMeetingRoomUsers(RoomID) {
@@ -127,24 +160,35 @@ io.on("connection", async (socket) => {
   );
 
   //傳送訊息給所有用戶並儲存訊息
-  socket.on("sendMessage", (msg) => {
-    // msg = {
-    //   dataType: msg.dataType,
-    //   sender: socket.handshake.auth.userName,
-    //   content: msg.content,
-    // };
+  socket.on("sendMessage", async (msg) => {
     //紀錄聊天訊息
-    msg.senderID = socket.handshake.auth.userID
-    console.dir(msg)
-    DB.setChatRecord(new ObjectId(socket.handshake.auth.RoomID),msg)
-    //   msg.dataType,
-    //   socket.handshake.auth.userID,
-    //   socket.handshake.auth.userName,
-    //   msg.content
-    // );
+    msg.senderID = socket.handshake.auth.userID;
+    console.dir(msg);
+    DB.setChatRecord(new ObjectId(socket.handshake.auth.RoomID), msg);
     io.to(socket.handshake.auth.RoomID).emit("sendMessage", msg);
+    // gpt
+    if (msg.recipient == "GPT") {
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "user", content: msg.content.slice(msg.content.indexOf(" ")) },
+        ],
+      });
+      msg = {
+        dataType: "GPT",
+        recipient: "all",
+        sender: "GPT",
+        content: response.choices[0].message.content,
+      };
+      console.dir(msg.content)
+      DB.setChatRecord(new ObjectId(socket.handshake.auth.RoomID), msg);
+      io.to(socket.handshake.auth.RoomID).emit("sendMessage", msg);
+    }
   });
 
   //繪圖用
-  socket.on("drawing", (data) => socket.broadcast.emit("drawing", data));
+  socket.on("drawing", (data) => {
+    socket.broadcast.emit("drawing", data);
+    console.log(data);
+  });
 });

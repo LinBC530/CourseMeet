@@ -79,7 +79,7 @@ export const useScreenVideo = defineStore("counter", {
         this.displayMedia = await LocalStream.getDisplayMedia({
           resolution: "vga",
           video: true,
-          // audio: true,
+          audio: true,
           codec: "vp8",
         });
         console.dir(this.displayMedia)

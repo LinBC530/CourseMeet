@@ -3,11 +3,9 @@ import { ref, reactive, onMounted, onUpdated } from "vue";
 import { useMeetingData } from "src/stores/Meeting";
 import { useUserData } from "src/stores/UserData";
 import { api } from "../boot/axios";
-import { useQuasar } from "quasar";
 
 const store = useUserData();
 const Meeting = useMeetingData();
-const $q = useQuasar();
 const socket = Meeting.socket;
 const message = ref("");
 let output, ap;
@@ -17,11 +15,6 @@ onMounted(() => {
   output = document.getElementById("output");
   //錨點
   ap = document.getElementById("ap");
-
-  //拖曳事件監聽
-  output.addEventListener("dragenter", dragenter, false);
-  output.addEventListener("dragover", dragover, false);
-  output.addEventListener("drop", drop, false);
 });
 
 onUpdated(() => {
@@ -29,22 +22,11 @@ onUpdated(() => {
   ap.scrollIntoView({ behavior: "smooth" });
 });
 
-function get_recipient() {
-  if (message.value.indexOf(" ") == -1) return message.value.slice(1);
-  else return message.value.slice(1, message.value.indexOf(" "));
-}
-
 //將訊息傳送至Server做處理
 function sendMessage() {
   if (message.value) {
-    // if (get_recipient() == "GPT") {
-    //   api
-    //     .post("/AI/GPT", {msg: message.value.slice(message.value.indexOf(" "))})
-    //     .catch((err) => {});
-    // }
     socket.emit("sendMessage", {
       dataType: "msg",
-      recipient: message.value[0] == "@" ? get_recipient() : "all",
       sender: store.userName,
       content: message.value,
     });
@@ -93,19 +75,10 @@ function judgmentDataType(msg) {
     case "SystemMsg":
       messages.push({
         dataType: "SystemMsg",
-        userName: "System",
+        userName: 'System',
         message: msg.content,
         sent: true,
       });
-      break;
-    case "GPT":
-      messages.push({
-        dataType: "GPT_Msg",
-        userName: "GPT",
-        message: msg.content,
-        sent: true,
-      });
-      console.dir(msg.content)
       break;
     default:
       break;
@@ -117,102 +90,10 @@ socket.on("sendMessage", (msg) => judgmentDataType(msg));
 
 //將收到的訊息新增至messages，以顯示於聊天室
 socket.on("allMessage", (msgs) => judgmentDataType(msgs));
-
-function dragenter(e) {
-  //阻止冒泡及停止預設行為
-  e.stopPropagation();
-  e.preventDefault();
-}
-
-function dragover(e) {
-  //阻止冒泡及停止預設行為
-  e.stopPropagation();
-  e.preventDefault();
-}
-
-function drop(e) {
-  //阻止冒泡及停止預設行為
-  e.stopPropagation();
-  e.preventDefault();
-
-  const dt = e.dataTransfer;
-  const files = dt.files;
-  handleFiles(files);
-}
-
-//處理圖片及檔案
-function handleFiles(files) {
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const imageType = /image.*/;
-
-    //處理圖片格式並傳送至伺服器(與聊天訊息相同方式傳送)
-    if (file.type.match(imageType)) {
-      const reader = new FileReader();
-      //轉Base64
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        socket.emit("sendMessage", {
-          dataType: "img",
-          sender: store.userName,
-          content: reader.result,
-        });
-      };
-    }
-    //檔案傳送至伺服器
-    else {
-      let formData = new FormData();
-      formData.append("file", file);
-      api
-        .post("/sendFile", formData)
-        .then((res) => {
-          //(未處理完成)
-          if (res.data.type) {
-            $q.notify({
-              message: "上傳成功",
-              color: "negative",
-            });
-            socket.emit("sendMessage", {
-              dataType: "file",
-              sender: store.userName,
-              fileName: res.data.data.fileName,
-              content: res.data.data.fileID,
-            });
-          } else
-            $q.notify({
-              message: res.data.reason,
-              color: "negative",
-            });
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    }
-  }
-}
-
-//下載檔案
-function getFile(fileID, fileName) {
-  //對server發出請求，等待srver傳回對應檔案ID(fileID)之檔案，並指定傳回格式為blob
-  api
-    .post("/getFile", { fileID: fileID }, { responseType: "blob" })
-    .then((res) => {
-      //產生一個超連結，並設置下載屬性，且指定下載之連結位置為傳回之檔案的參考位置，後執行下載
-      const Link = document.createElement("a");
-      Link.download = fileName;
-      Link.style.display = "none";
-      Link.href = URL.createObjectURL(res.data);
-      Link.click();
-      URL.revokeObjectURL(Link.href);
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-}
 </script>
 
 <template>
-  <div id="talk-main">
+  <div id="AI_teaching_assistant">
     <div id="output">
       <div id="messages" style="padding: 5pt" v-for="msg in messages">
         <q-chat-message
@@ -220,16 +101,14 @@ function getFile(fileID, fileName) {
           :sent="msg.sent"
           :bg-color="msg.dataType == 'SystemMsg' ? 'orange-5' : null"
         >
-          <div style="white-space: pre-wrap;"
+          <div
             v-if="
               msg.dataType == 'msg' ||
-              msg.dataType == 'GPT_Msg' ||
               msg.dataType == 'img' ||
               msg.dataType == 'SystemMsg'
             "
             v-html="msg.message"
           />
-          <!-- <div v-if="msg.dataType == 'SystemMsg'" v-html="msg.userName" /> -->
           <div
             v-if="msg.dataType == 'file'"
             class="file"
@@ -244,13 +123,7 @@ function getFile(fileID, fileName) {
     </div>
     <div id="input">
       <form onclick="return false">
-        <input
-          id="msgbox"
-          :on-change="message_onchange"
-          v-model="message"
-          type="text"
-          autocomplete="off"
-        />
+        <input id="msgbox" v-model="message" type="text" autocomplete="off" />
         <button id="snedButton" @click="sendMessage">
           <q-icon name="send" size="36px" />
         </button>
@@ -260,7 +133,7 @@ function getFile(fileID, fileName) {
 </template>
 
 <style scoped>
-#talk-main {
+#AI_teaching_assistant {
   height: 100%;
   width: 100%;
 }

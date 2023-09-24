@@ -4,6 +4,7 @@ import Talk from "./Talk.vue";
 import Member from "./Member.vue";
 import MeetingMinutes from "./MeetingMinutes.vue";
 import FileList from "./fileList.vue";
+import AI_teaching_assistant from "./AI_teaching_assistant.vue";
 const navSwitchType = ref(false);
 
 //工具是否啟用(預設狀態)
@@ -11,7 +12,7 @@ const show = reactive({
   memberList: false,
   meetingMinutes: false,
   charRoom: true,
-  assistant_AI: false,
+  AI_teaching_assistant: false,
   userAccount: false,
   fileList: false,
 });
@@ -26,7 +27,7 @@ function ToolOnClick(obj) {
       show.memberList = true;
       show.meetingMinutes = false;
       show.charRoom = false;
-      show.assistant_AI = false;
+      show.AI_teaching_assistant = false;
       show.userAccount = false;
       show.fileList = false;
     }
@@ -37,7 +38,7 @@ function ToolOnClick(obj) {
       show.memberList = false;
       show.meetingMinutes = true;
       show.charRoom = false;
-      show.assistant_AI = false;
+      show.AI_teaching_assistant = false;
       show.userAccount = false;
       show.fileList = false;
     }
@@ -48,18 +49,18 @@ function ToolOnClick(obj) {
       show.memberList = false;
       show.meetingMinutes = false;
       show.charRoom = true;
-      show.assistant_AI = false;
+      show.AI_teaching_assistant = false;
       show.userAccount = false;
       show.fileList = false;
     }
-  } else if (obj.target.matches(".assistant_AI")) {
-    if (show.assistant_AI == true) {
+  } else if (obj.target.matches(".AI_teaching_assistant")) {
+    if (show.AI_teaching_assistant == true) {
       navSwitchType.value = !navSwitchType.value;
     } else {
       show.memberList = false;
       show.meetingMinutes = false;
       show.charRoom = false;
-      show.assistant_AI = true;
+      show.AI_teaching_assistant = true;
       show.userAccount = false;
       show.fileList = false;
     }
@@ -70,7 +71,7 @@ function ToolOnClick(obj) {
       show.memberList = false;
       show.meetingMinutes = false;
       show.charRoom = false;
-      show.assistant_AI = false;
+      show.AI_teaching_assistant = false;
       show.userAccount = true;
       show.fileList = false;
     }
@@ -81,7 +82,7 @@ function ToolOnClick(obj) {
       show.memberList = false;
       show.meetingMinutes = false;
       show.charRoom = false;
-      show.assistant_AI = false;
+      show.AI_teaching_assistant = false;
       show.userAccount = false;
       show.fileList = true;
     }
@@ -98,6 +99,7 @@ function ToolOnClick(obj) {
       <Member v-show="show.memberList" />
       <MeetingMinutes v-show="show.meetingMinutes" />
       <FileList v-show="show.fileList" />
+      <AI_teaching_assistant v-show="show.AI_teaching_assistant" />
     </div>
     <div id="nav" @click="navSwitchType = !navSwitchType">
       <div class="memberList" id="memberList_Button" @click="ToolOnClick">
@@ -112,9 +114,9 @@ function ToolOnClick(obj) {
         <q-icon class="charRoom" name="chat" size="36px"></q-icon>
         <span class="charRoom" id="icon_text">聊天室</span>
       </div>
-      <div class="assistant_AI" id="assistant_AI_Button" @click="ToolOnClick">
-        <q-icon class="assistant_AI" name="school" size="36px"></q-icon>
-        <span class="assistant_AI" id="icon_text">AI助教</span>
+      <div class="AI_teaching_assistant" id="AI_teaching_assistant_Button" @click="ToolOnClick">
+        <q-icon class="AI_teaching_assistant" name="school" size="36px"></q-icon>
+        <span class="AI_teaching_assistant" id="icon_text">AI助教</span>
       </div>
       <div class="fileList" id="fileList_Button" @click="ToolOnClick">
         <q-icon class="fileList" name="description" size="36px"></q-icon>
@@ -157,7 +159,7 @@ function ToolOnClick(obj) {
 #memberList_Button,
 #meetRecord_Button,
 #charRoom_Button,
-#assistant_AI_Button,
+#AI_teaching_assistant_Button,
 #userAccount_Button,
 #fileList_Button {
   height: 60px;
@@ -170,7 +172,7 @@ function ToolOnClick(obj) {
 #memberList_Button:hover,
 #meetRecord_Button:hover,
 #charRoom_Button:hover,
-#assistant_AI_Button:hover,
+#AI_teaching_assistant_Button:hover,
 #userAccount_Button:hover,
 #fileList_Button:hover {
   cursor: pointer;

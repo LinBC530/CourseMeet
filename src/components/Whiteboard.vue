@@ -19,6 +19,7 @@ const colorPicker = ref(null);
 var ctx = null;
 
 onMounted(() => {
+  console.dir(canvas.value)
   ctx = canvas.value.getContext("2d");
   canvas.value.addEventListener("mousedown", startDraw);
   canvas.value.addEventListener("mousemove", drawing);
@@ -55,10 +56,10 @@ const selectedTool = "brush";
 const brushWidth = 5;
 let selectedColor = "#000";
 
-window.addEventListener("load", () => {
-  canvas.value.width = canvas.offsetWidth;
-  canvas.value.height = canvas.offsetHeight;
-});
+// window.addEventListener("load", () => {
+//   canvas.value.width = canvas.value.clientWidth;
+//   canvas.value.height = canvas.value.clientHeigh;
+// });
 //畫長方形
 const drawRect = (e) => {
   if (!fillcolor.checked) {
@@ -102,7 +103,8 @@ const startDraw = (e) => {
   prevMouseX = e.offsetX;
   prevMouseY = e.offsetY;
   ctx.beginPath();
-  ctx.lineWidth = brushWidth;
+  // ctx.lineWidth = brushWidth;
+  ctx.lineWidth = 2;
   ctx.strokeStyle = selectedColor;
   ctx.fillStyle = selectedColor;
   snapshot = ctx.getImageData(0, 0, canvas.value.width, canvas.value.height);
@@ -341,5 +343,10 @@ section {
 
 .colors {
   position: fixed;
+}
+
+canvas {
+  height: 100%;
+  width: 100%;
 }
 </style>

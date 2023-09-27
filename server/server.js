@@ -88,33 +88,6 @@ app.post("/checkMeeting", express.json(), async (req, res) => {
     res.send({ type: true, reason: "" });
   else res.send({ type: false, reason: "查無此會議" });
 });
-//傳送訊息至openAI
-// app.post("/AI/GPT", express.json(), async (req, res) => {
-//   console.dir(req.method);
-//   JSON.stringify(req.body);
-// res.send((await DB.getChatRecord(socket.handshake.auth.RoomID)).data)
-// res.send(
-//   await openai.chat.completions.create({
-//     model: "gpt-3.5-turbo",
-//     messages: [
-//       {role: "user" , content: "說'這是一隻貓'"},
-//       {role: "assistant", content: "這是一隻貓"},
-//       { role: "user", content: "剛剛的談話內容是甚麼?" }
-//     ],
-//   })
-// );
-// });
-
-// async function GPT() {
-//   const response = await openai.chat.completions.create({
-//     model: "gpt-3.5-turbo",
-//     messages: [
-//       { role: "user", content: "回應'這是一個測試'" },
-//     ],
-//   });
-
-//   return response.choices[0].message.content;
-// }
 
 //取得在會議室中的用戶的資訊
 async function getOnMeetingRoomUsers(RoomID) {
@@ -125,7 +98,6 @@ async function getOnMeetingRoomUsers(RoomID) {
       userName: socket.handshake.auth.userName,
     });
   }
-  // console.dir(users)
   return users;
 }
 

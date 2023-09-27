@@ -6,6 +6,7 @@ import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { ref } from "vue";
 
+const REC_msg = ref(false);
 const $q = useQuasar();
 const store = useScreenVideo();
 const Meeting = useMeetingData();
@@ -27,16 +28,15 @@ function openWhiteBoard() {
   window.open(routeData.href, "_blank");
 }
 function raisedHand() {
-  // $q.notify({
-  //   message: "你舉手",
-  //   color: "purple",
-  //   position: "bottom-right",
-  // });
   socket.emit("sendMessage", {
     dataType: "SystemMsg",
     sender: UserData.userName,
     content: UserData.userName + "舉手",
   });
+}
+function REC_onClick() {
+  if(store.REC()) REC_msg.value = true;
+  else REC_msg.value = false;
 }
 // function VideoCamButtonOnClick() {
 //   cam_isOpen.value = !cam_isOpen.value;
@@ -116,7 +116,7 @@ function RoomID_OnClick() {
           color="black"
         ></q-icon>
       </button> -->
-      <button class="btn" id="Present" @click="store.set_Pub_video_src();">
+      <button class="btn" id="Present" @click="store.set_Pub_video_src()">
         <q-icon
           class="material-symbols-outlined"
           name="present_to_all"
@@ -124,7 +124,7 @@ function RoomID_OnClick() {
           color="black"
         ></q-icon>
       </button>
-      <button class="btn" id="REC" @click="store.REC();">
+      <button class="btn" id="REC" @click="REC_onClick">
         <q-icon
           class="material-symbols-outlined"
           name="radio_button_checked "
@@ -133,10 +133,10 @@ function RoomID_OnClick() {
           color="black"
         ></q-icon>
       </button>
-      <q-dialog v-model="store.isREC" seamless position="top">
-        <q-card style="width: 400px; background-color:rgb(67, 67, 67)">
+      <q-dialog v-model="REC_msg" seamless position="top">
+        <q-card style="width: 400px; background-color: rgb(67, 67, 67)">
           <q-card-section class="row items-center no-wrap">
-              <div style="color: rgb(255, 255, 255);">正在錄製此影像</div>
+            <div style="color: rgb(255, 255, 255)">正在錄製此影像</div>
             <q-space />
             <q-btn flat round color="grey-1" icon="close" v-close-popup />
           </q-card-section>

@@ -17,6 +17,7 @@ onMounted(() => {
   output = document.getElementById("output");
   //錨點
   ap = document.getElementById("ap");
+  ap.scrollIntoView({ behavior: "smooth" })
 
   //拖曳事件監聽
   output.addEventListener("dragenter", dragenter, false);

@@ -70,8 +70,10 @@ export const useScreenVideo = defineStore("counter", {
           this.isREC = false;
         };
         this.isREC = true;
+        return true;
       } else if (this.isREC) {
         this.mediaRecorder.stop();
+        return false;
       }
     },
     async set_Pub_video_src() {

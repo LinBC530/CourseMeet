@@ -15,7 +15,7 @@ const Streams = reactive({
   displayMider: [],
 });
 
-const signal = new IonSFUJSONRPCSignal("ws://localhost:7000/ws");
+const signal = new IonSFUJSONRPCSignal("wss://localhost:7000/ws");
 const client = new Client(signal);
 signal.onopen = () => {
   store.joinRoom();

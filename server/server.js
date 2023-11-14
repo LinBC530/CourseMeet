@@ -2,22 +2,27 @@ const OpenAI = require("openai").default;
 const openai = new OpenAI({
   apiKey: "API_KEY",
 });
-// const api = require("axios").default;
 const DB = require("./db_function");
 const express = require("express");
+const fs = require('fs');
+var options = {
+  key: fs.readFileSync('C:/Users/user/Desktop/SSL/server.key'),
+  cert: fs.readFileSync('C:/Users/user/Desktop/SSL/server.crt')
+};
 const app = express();
-const http = require("http").Server(app);
-const io = require("socket.io")(http);
+const https = require("https").Server(options,app);
+const io = require("socket.io")(https);
 const cors = require("cors");
 const multer = require("multer");
-// const path = require("path");
+const path = require("path");
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 3000;
-http.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+
+https.listen(port, () => {
+  console.log(`Server running at https://localhost:${port}/`);
 });
 
-// app.use(express.static(path.resolve('../dist/spa')));
+app.use(express.static(path.resolve('../dist/spa')));
 //啟用所有CORS請求
 app.use(cors());
 
@@ -25,7 +30,6 @@ app.use(cors());
 //確認帳戶資料用
 app.post("/checkAccount", express.json(), async (req, res) => {
   JSON.stringify(req.body);
-  // setTimeout(async() => {res.send(await DB.getUserData(req.body.Email, req.body.Pwd))}, 5000)
   res.send(await DB.getUserData(req.body.Email, req.body.Pwd));
 });
 //新增帳戶資料用
@@ -36,8 +40,6 @@ app.post("/newAccount", express.json(), async (req, res) => {
 //修改帳戶資料
 app.patch("/changeAccountData", express.json(), async (req, res) => {
   JSON.stringify(req.body);
-  // DB.updateUserData(req.body.userID, req.body.pwd, req.body.data);
-  // res.send({ type: true, data: 123 });
   res.send(
     await DB.updateUserData(req.body.userID, req.body.pwd, req.body.data)
   );

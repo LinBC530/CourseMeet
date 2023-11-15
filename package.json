@@ -2,7 +2,7 @@
   "name": "final-project",
   "version": "0.0.1",
   "description": "A Quasar Project",
-  "productName": "Quasar App",
+  "productName": "Discuss",
   "author": "LinBC",
   "private": true,
   "scripts": {

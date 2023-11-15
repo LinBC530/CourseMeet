@@ -19,11 +19,11 @@ const REC_isOpen = ref(false);
 const ShareScreen_isOpen = ref(false);
 
 function end() {
-  router.push({ path: "/Exit" });
+  router.push({ path: "Main/Exit" });
 }
 function openWhiteBoard() {
   const routeData = router.resolve({
-    path: "/whiteboard",
+    path: "Main/whiteboard",
   });
   window.open(routeData.href, "_blank");
 }

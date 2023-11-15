@@ -8,49 +8,72 @@ import { api } from "../boot/axios";
 const $q = useQuasar();
 const store = useUserData();
 const router = useRouter();
+const t =null;
+let slide_tmp = 'login';
+const slide = ref("login");
 //密碼是否可見
 const isPwd = ref(true);
 //登入或註冊
-const haveAccount = ref(true);
 const user = reactive({
-  Email: null,
-  Pwd: null,
-  Name: null,
+  login: {
+    Email: null,
+    Pwd: null,
+  },
+  register: {
+    Email: null,
+    Pwd: null,
+    Name: null,
+  },
 });
+function clear_user() {
+  user.login.Email = null;
+  user.login.Pwd = null;
+  user.register.Email = null;
+  user.register.Name = null;
+  user.register.Pwd = null;
+}
 
 //設定Axios攔截器，加入等待中動畫
 api.interceptors.request.use(
   (req) => {
-    $q.loading.show();
+    // $q.loading.show();
+    slide_tmp = slide.value;
+    slide.value = 'wait';
     return req;
   },
   (err) => {
-    $q.loading.hide();
+    slide.value = slide_tmp;
     return Promise.reject(err);
   }
 );
 api.interceptors.response.use(
   (res) => {
-    $q.loading.hide();
+    // $q.loading.hide();
+    slide.value = slide_tmp;
     return res;
   },
   (err) => {
-    $q.loading.hide();
+    // $q.loading.hide();
+    slide.value = slide_tmp;
     return Promise.reject(err);
   }
 );
 
 function sendAccountData() {
   //登入
-  if (haveAccount.value == true) {
-    if (user.Email && user.Pwd) {
+  if (slide.value == "login") {
+    if (user.login.Email && user.login.Pwd) {
       api
-        .post("/checkAccount", { Email: user.Email, Pwd: user.Pwd })
+        .post("/checkAccount", { Email: user.login.Email, Pwd: user.login.Pwd })
         .then((res) => {
           if (res.data) {
-            console.dir(res.data)
+            console.dir(res.data);
             if (res.data.type) {
-              store.setUserData(res.data.data.userID, res.data.data.userName, res.data.data.userEmail);
+              store.setUserData(
+                res.data.data.userID,
+                res.data.data.userName,
+                res.data.data.userEmail
+              );
               router.push({ path: "/" });
             } else {
               $q.notify({
@@ -76,19 +99,20 @@ function sendAccountData() {
   }
   //註冊
   else {
-    if (user.Email && user.Pwd && user.Name) {
+    if (user.register.Email && user.register.Pwd && user.register.Name) {
       api
         .post("/newAccount", {
-          Name: user.Name,
-          Email: user.Email,
-          Pwd: user.Pwd,
+          Name: user.register.Name,
+          Email: user.register.Email,
+          Pwd: user.register.Pwd,
         })
         .then((res) => {
           if (res.data) {
-            console.dir(res.data)
+            console.dir(res.data);
             if (res.data.type == true) {
               alert("註冊成功");
-              haveAccount.value = true;
+              clear_user()
+              slide.value = "login";
             } else {
               // alert("此帳戶已被註冊");
               $q.notify({
@@ -112,124 +136,243 @@ function sendAccountData() {
 </script>
 
 <template>
-  <q-card id="loginPage">
-    <q-card-section>
-      <div id="title">
-        <span>Discuss</span>
-      </div>
-      <div id="nav">
-        <span @click="haveAccount = true">登入</span>
-        /
-        <span @click="haveAccount = false">註冊</span>
-      </div>
-      <q-form @submit="sendAccountData">
-        <div id="input">
-          <q-input
-            id="name_box"
-            v-model="user.Name"
-            v-if="!haveAccount"
-            type="text"
-            label="name"
-            :rules="[(value) => !!value || '請輸入名稱']"
-          />
-          <q-input
-            id="Email_box"
-            v-model="user.Email"
-            type="email"
-            label="Email"
-            :rules="[(value) => !!value || '請輸入信箱']"
-          />
-          <q-input
-            id="pwd_box"
-            v-model="user.Pwd"
-            :type="isPwd ? 'password' : 'text'"
-            label="password"
-            :rules="[(value) => !!value || '請輸入密碼']"
+  <div
+    class="q-pa-md"
+    id="loginPage"
+    style="background-color: rgb(255, 255, 255)"
+  >
+    <div id="title">
+      <span>Discuss</span>
+    </div>
+
+    <!-- 控制項 -->
+    <div id="nav" v-show="slide != 'wait'" class="row justify-center">
+      <span @click="slide = 'login'">登入</span>
+      /
+      <span @click="slide = 'register'">註冊</span>
+    </div>
+
+    <q-carousel
+      v-model="slide"
+      transition-prev="slide-right"
+      transition-next="slide-left"
+      animated
+      control-color="primary"
+      class="rounded-borders carousel"
+    >
+      <!-- 登入 -->
+      <q-carousel-slide name="login" class="column no-wrap flex-center">
+        <q-form class="carousel slide from" @submit="sendAccountData">
+          <div id="input">
+            <q-input
+              id="Email_box"
+              v-model="user.login.Email"
+              label="email"
+              :rules="[
+                (value) =>
+                  !!value
+                    ? /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(
+                        value
+                      )
+                      ? null
+                      : '信箱格式錯誤'
+                    : '請輸入信箱',
+              ]"
+            />
+
+            <q-input
+              id="pwd_box"
+              v-model="user.login.Pwd"
+              :type="isPwd ? 'password' : 'text'"
+              label="password"
+              :rules="[(value) => !!value || '請輸入密碼']"
+            >
+              <!-- 圖示 -->
+              <template v-slot:append>
+                <q-icon
+                  :name="isPwd ? 'visibility_off' : 'visibility'"
+                  class="cursor-pointer"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </q-input>
+          </div>
+
+          <div id="button">
+            <q-btn
+              id="btn"
+              type="submit"
+              label-color="dark"
+              unelevated
+              rounded
+              color="secondary"
+              label="登入"
+            />
+          </div>
+        </q-form>
+        <div>
+          <span id="other_login" @click="slide = 'other_login'"
+            >使用其他方式登入</span
           >
-            <template v-slot:append>
-              <q-icon
-                :name="isPwd ? 'visibility_off' : 'visibility'"
-                class="cursor-pointer"
-                @click="isPwd = !isPwd"
-              />
-            </template>
-          </q-input>
         </div>
-        <div id="button" v-if="haveAccount">
-          <q-btn
-            id="btn"
-            type="submit"
-            label-color="dark"
-            unelevated
-            rounded
-            color="secondary"
-            label="登入"
+      </q-carousel-slide>
+
+      <!-- 註冊 -->
+      <q-carousel-slide
+        name="register"
+        class="column no-wrap flex-center carousel slide"
+      >
+        <q-form class="carousel slide from" @submit="sendAccountData">
+          <div id="input">
+            <q-input
+              id="name_box"
+              v-model="user.register.Name"
+              type="text"
+              label="name"
+              :rules="[(value) => !!value || '請輸入名稱']"
+            />
+            <q-input
+              id="Email_box"
+              v-model="user.register.Email"
+              label="email"
+              :rules="[
+                (value) =>
+                  !!value
+                    ? /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(
+                        value
+                      )
+                      ? null
+                      : '信箱格式錯誤'
+                    : '請輸入信箱',
+              ]"
+            />
+            <q-input
+              id="pwd_box"
+              v-model="user.register.Pwd"
+              :type="isPwd ? 'password' : 'text'"
+              label="password"
+              :rules="[(value) => !!value || '請輸入密碼']"
+            >
+              <template v-slot:append>
+                <q-icon
+                  :name="isPwd ? 'visibility_off' : 'visibility'"
+                  class="cursor-pointer"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </q-input>
+          </div>
+
+          <div id="button">
+            <q-btn
+              id="btn"
+              type="submit"
+              label-color="dark"
+              unelevated
+              rounded
+              color="secondary"
+              label="註冊"
+            />
+          </div>
+        </q-form>
+      </q-carousel-slide>
+
+      <q-carousel-slide name="other_login" class="column no-wrap flex-center carousel slide">
+        <div>開發中</div>
+      </q-carousel-slide>
+
+      <!-- 等待伺服器回應 -->
+      <q-carousel-slide
+        name="wait"
+        class="column no-wrap flex-center carousel slide"
+      >
+        <div style="height: 200px; width: 100%">
+          <q-inner-loading
+            class="column no-wrap flex-center"
+            :showing="true"
+            label="請稍後..."
+            label-class="text-teal"
+            label-style="font-size: 25px;"
           />
         </div>
-        <div id="button" v-else>
-          <q-btn
-            id="btn"
-            type="submit"
-            label-color="dark"
-            unelevated
-            rounded
-            color="secondary"
-            label="註冊"
-          />
-        </div>
-      </q-form>
-    </q-card-section>
-  </q-card>
+      </q-carousel-slide>
+    </q-carousel>
+  </div>
 </template>
 
 <style scoped>
 #loginPage {
+  height: auto;
   width: 50%;
-  min-height: 300pt;
-  min-width: 500pt;
+  min-height: 300px;
+  min-width: 600px;
   padding: 10pt;
+  border-radius: 10px;
 }
+
 #nav {
   display: flex;
   justify-content: center;
   font-size: 20pt;
 }
+
 #nav span {
   color: rgb(46, 46, 170);
 }
+
 #nav span:hover {
   cursor: pointer;
 }
+
 #title {
-  height: 40%;
+  height: 25%;
   display: flex;
   justify-content: center;
 }
+
 #title span {
   display: flex;
   align-items: center;
   font-size: 50pt;
 }
-form {
-  height: 60%;
-  width: 80%;
-  margin: 0 auto;
+
+.carousel {
+  height: auto;
+  padding: 0;
 }
-#button {
+
+.carousel.slide {
+  padding: 0;
+}
+
+.carousel.from {
+  height: 100%;
   width: 100%;
-  margin: 10pt;
+  margin: 0;
+}
+
+#button {
+  width: calc(100% - 15px);
+  margin: 15px;
+  margin-top: 5px;
   display: flex;
   justify-content: center;
 }
+
 #input {
   height: 80;
   width: 80%;
   margin-left: auto;
   margin-right: auto;
 }
+
 #btn {
   height: 20%;
   width: 50%;
   font-size: 15pt;
+}
+
+#other_login {
+  size: 10px;
 }
 </style>

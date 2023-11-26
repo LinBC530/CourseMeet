@@ -6,16 +6,16 @@ import { useRouter } from "vue-router";
 import { useUserData } from "src/stores/UserData";
 import { useMeetingData } from 'src/stores/Meeting';
 
-const Meeting = useMeetingData()
-const store = useUserData();
+const socket = useMeetingData().socket
+const user_data = useUserData();
 const router = useRouter();
 
-if (!store.haveUserData()) {
+if (!user_data.haveUserData()) {
   router.push({ path: "/Login" });
 } else {
-  Meeting.socket.auth = {
-    userID: store.userID,
-    userName: store.userName,
+  socket.auth = {
+    userID: user_data.userID,
+    userName: user_data.userName,
   };
 }
 </script>

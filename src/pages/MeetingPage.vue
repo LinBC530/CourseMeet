@@ -8,12 +8,15 @@ import { useRouter } from "vue-router";
 import { onUnmounted } from "vue";
 
 onUnmounted(() => {
-  //刪除users_in_the_room事件監聽(避免事件重複觸發)
-  // Meeting.socket.removeListener("users_in_the_room");
-  //銷毀時關閉socket(避免事件重複觸發)
+  // 斷開始用者連線
+  socket.disconnect()
+  // DOM銷毀時關閉socket(避免事件重複觸發)
   socket.off()
-  //銷毀時清除視訊相關資料
+  // DOM銷毀時重置視訊及會議相關資料
   ScreenVideo.$reset();
+  // Meeting.$reset();
+  // DOM銷毀時清除socket夾帶的資料
+  // Meeting.socket.auth = null;
 });
 
 const router = useRouter();
@@ -21,8 +24,9 @@ const Meeting = useMeetingData();
 const ScreenVideo = useScreenVideo();
 const socket = Meeting.socket;
 
+// 判斷socket是否有夾帶使用者資料及會議代碼
 if (!Meeting.socket.auth) {
-  // socket.off()
+  // 返回加入會議頁面
   router.push({ path: "/" });
 } else {
   Meeting.socket.connect();
@@ -39,10 +43,13 @@ socket.on("users_in_the_room", (users) => {
   <div id="main">
     <div id="view">
       <div id="Meeting">
+        <!-- 視訊畫面 -->
         <div id="MeetingContent"><View /></div>
+        <!-- 底部工具列 -->
         <div id="MeetingCallNav"><call_Nav /></div>
       </div>
     </div>
+    <!-- 右側工具列 -->
     <div id="tool"><UserTool /></div>
   </div>
 </template>
@@ -60,7 +67,6 @@ socket.on("users_in_the_room", (users) => {
   height: 100%;
 }
 #view,
-#CourseMenu,
 #Meeting {
   height: 100%;
   width: 100%;

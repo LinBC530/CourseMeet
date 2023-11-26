@@ -8,8 +8,8 @@ import { api } from "../boot/axios";
 const $q = useQuasar();
 const store = useUserData();
 const router = useRouter();
-const t =null;
-let slide_tmp = 'login';
+// const t = null;
+let slide_tmp = "login";
 const slide = ref("login");
 //密碼是否可見
 const isPwd = ref(true);
@@ -38,7 +38,7 @@ api.interceptors.request.use(
   (req) => {
     // $q.loading.show();
     slide_tmp = slide.value;
-    slide.value = 'wait';
+    slide.value = "wait";
     return req;
   },
   (err) => {
@@ -111,7 +111,7 @@ function sendAccountData() {
             console.dir(res.data);
             if (res.data.type == true) {
               alert("註冊成功");
-              clear_user()
+              clear_user();
               slide.value = "login";
             } else {
               // alert("此帳戶已被註冊");
@@ -142,7 +142,7 @@ function sendAccountData() {
     style="background-color: rgb(255, 255, 255)"
   >
     <div id="title">
-      <span>Discuss</span>
+      <span>AI教學平台</span>
     </div>
 
     <!-- 控制項 -->
@@ -277,7 +277,11 @@ function sendAccountData() {
         </q-form>
       </q-carousel-slide>
 
-      <q-carousel-slide name="other_login" class="column no-wrap flex-center carousel slide">
+      <!-- 其他登入方式 -->
+      <q-carousel-slide
+        name="other_login"
+        class="column no-wrap flex-center carousel slide"
+      >
         <div>開發中</div>
       </q-carousel-slide>
 

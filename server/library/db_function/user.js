@@ -1,14 +1,91 @@
 const { ObjectId } = require("mongodb");
 const { client, Data } = require("./mongo.js");
+const nodemailer = require("nodemailer");
+const fs = require("fs");
+require("dotenv").config({ path: "library/db_function/mail.env" });
 
 module.exports = {
+  newVerificationCode,
   setUserData,
   getUserData,
   updateUserData,
   removeUserData,
 };
 
-async function setUserData(name, email, pwd) {
+let mail;
+fs.readFile("library/api/mail.html", "utf-8", function (err, data) {
+  if (err) {
+    console.error(err);
+  } else {
+    mail = data;
+  }
+});
+
+async function newVerificationCode(email) {
+  //傳回之資料
+  const data_out = new Data();
+  try {
+    const database = client.db("Meet");
+    const Users = database.collection("User");
+    let result;
+    const data_in = {
+      email: email,
+      VerificationCode: Math.floor(Math.random() * (9999 - 1000)) + 1000,
+    };
+    const haveData = await Users.findOne({ email: data_in.email });
+    if (!haveData) result = await Users.insertOne(data_in);
+    else if(haveData.password && haveData.name) {
+      data_out.fail("此信箱已被註冊");
+      return data_out;
+    }
+    else
+      result = await Users.updateOne(
+        { email: email },
+        { $set: { VerificationCode: data_in.VerificationCode } }
+      );
+    //收到DB資料
+    if (result) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASS,
+        },
+      });
+
+      await transporter.verify();
+
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: email,
+        subject: "AI學習平台-信箱驗證",
+        html:
+          mail +
+          "<h1 style='color: rgb(50, 50, 209);'>" +
+          data_in.VerificationCode.toString() +
+          "</<h1>",
+      };
+
+      transporter.sendMail(mailOptions, (err, info) => {
+        if (err) throw new Error("Error sending email");
+      });
+      data_out.success();
+      return data_out;
+    }
+    //DB發生錯誤
+    else {
+      data_out.fail("發生錯誤，請稍後再試");
+      return data_out;
+    }
+  } catch (e) {
+    console.dir(e);
+    //此方法發生錯誤
+    data_out.fail("發生錯誤，請稍後再試");
+    return data_out;
+  }
+}
+
+async function setUserData(name, email, pwd, VerificationCode) {
   //傳回之資料
   const data_out = new Data();
   try {
@@ -17,26 +94,31 @@ async function setUserData(name, email, pwd) {
     //傳入之資料打包
     const data_in = {
       name: name,
-      email: email,
+      // email: email,
       password: pwd,
     };
-    const haveData = await Users.findOne({ email: data_in.email });
-    if (!haveData) {
-      const result = await Users.insertOne(data_in);
-      //收到DB資料
-      if (result) {
-        data_out.success();
+    const VC = await (await Users.findOne({ email: email })).VerificationCode;
+    if (VC) {
+      if (VC != VerificationCode) {
+        data_out.fail("驗證碼錯誤");
         return data_out;
       }
-      //DB發生錯誤
-      else {
-        data_out.fail("發生錯誤，請稍後再試");
-        return data_out;
-      }
+    } else {
+      data_out.fail("請先取得驗證碼");
+      return data_out;
     }
-    //DB查無資料
+    const result = await Users.updateOne(
+      { email: email },
+      { $set: data_in, $unset: { VerificationCode: "" } }
+    );
+    //收到DB資料
+    if (result) {
+      data_out.success();
+      return data_out;
+    }
+    //DB發生錯誤
     else {
-      data_out.fail("此信箱已被註冊");
+      data_out.fail("發生錯誤，請稍後再試");
       return data_out;
     }
   } catch {

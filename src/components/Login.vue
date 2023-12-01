@@ -8,7 +8,6 @@ import { api } from "../boot/axios";
 const $q = useQuasar();
 const store = useUserData();
 const router = useRouter();
-// const t = null;
 let slide_tmp = "login";
 const slide = ref("login");
 //密碼是否可見
@@ -23,6 +22,7 @@ const user = reactive({
     Email: null,
     Pwd: null,
     Name: null,
+    VerificationCode: null,
   },
 });
 function clear_user() {
@@ -59,6 +59,41 @@ api.interceptors.response.use(
   }
 );
 
+function getVerificationCode() {
+  if (
+    user.register.Email &&
+    /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(user.register.Email)
+  ) {
+    api
+      .post("/newVerificationCode", { Email: user.register.Email })
+      .then((res) => {
+        if (res.data) {
+          if (res.data.type) {
+            $q.notify({
+              message: "已寄送驗證碼至您的信箱",
+              color: "negative",
+            });
+          } else {
+            $q.notify({
+              message: res.data.reason,
+              color: "negative",
+            });
+          }
+        } else {
+          $q.notify({
+            message: "發生錯誤，請稍後再試",
+            color: "negative",
+          });
+        }
+      });
+  } else {
+    $q.notify({
+      message: "請先填寫信箱",
+      color: "negative",
+    });
+  }
+}
+
 function sendAccountData() {
   //登入
   if (slide.value == "login") {
@@ -67,7 +102,6 @@ function sendAccountData() {
         .post("/checkAccount", { Email: user.login.Email, Pwd: user.login.Pwd })
         .then((res) => {
           if (res.data) {
-            console.dir(res.data);
             if (res.data.type) {
               store.setUserData(
                 res.data.data.userID,
@@ -99,16 +133,16 @@ function sendAccountData() {
   }
   //註冊
   else {
-    if (user.register.Email && user.register.Pwd && user.register.Name) {
+    if (user.register.Email && user.register.Pwd && user.register.Name && user.register.VerificationCode) {
       api
         .post("/newAccount", {
           Name: user.register.Name,
           Email: user.register.Email,
           Pwd: user.register.Pwd,
+          VC: user.register.VerificationCode
         })
         .then((res) => {
           if (res.data) {
-            console.dir(res.data);
             if (res.data.type == true) {
               alert("註冊成功");
               clear_user();
@@ -261,6 +295,21 @@ function sendAccountData() {
                 />
               </template>
             </q-input>
+            <div style="display: flex; align-items: center">
+              <q-input
+                style="width: auto"
+                id="VerificationCode_box"
+                v-model="user.register.VerificationCode"
+                type="text"
+                label="驗證碼"
+                :rules="[(value) => !!value || '請輸入驗證碼']"
+              />
+              <q-btn
+                @click="getVerificationCode"
+                style="height: auto; margin-left: 10px"
+                label="取得驗證碼"
+              />
+            </div>
           </div>
 
           <div id="button">
@@ -288,7 +337,7 @@ function sendAccountData() {
       <!-- 等待伺服器回應 -->
       <q-carousel-slide
         name="wait"
-        class="column no-wrap flex-center carousel slide"
+        class="column no-wrap flex-center cxarousel slide"
       >
         <div style="height: 200px; width: 100%">
           <q-inner-loading
@@ -310,11 +359,11 @@ function sendAccountData() {
   width: 50%;
   min-height: 300px;
   min-width: 600px;
-  padding: 10pt;
   border-radius: 10px;
 }
 
 #nav {
+  height: 30px;
   display: flex;
   justify-content: center;
   font-size: 20pt;
@@ -329,7 +378,6 @@ function sendAccountData() {
 }
 
 #title {
-  height: 25%;
   display: flex;
   justify-content: center;
 }
@@ -350,7 +398,6 @@ function sendAccountData() {
 }
 
 .carousel.from {
-  height: 100%;
   width: 100%;
   margin: 0;
 }
@@ -378,5 +425,6 @@ function sendAccountData() {
 
 #other_login {
   size: 10px;
+  cursor: pointer;
 }
 </style>

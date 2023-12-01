@@ -5,6 +5,7 @@ const file = require("./file.js");
 
 module.exports = {
   //user
+  newVerificationCode: user.newVerificationCode,
   setUserData: user.setUserData,
   getUserData: user.getUserData,
   updateUserData: user.updateUserData,

@@ -87,7 +87,7 @@ export const useScreenVideo = defineStore("counter", {
         });
         console.dir(this.displayMedia)
         this.isPub = true;
-        this.displayMedia.addTrack(this.userMedia.getAudioTracks()[0])
+        if (this.userMedia) this.displayMedia.addTrack(this.userMedia.getAudioTracks()[0])
         this.displayMedia.getTracks().forEach((track) => {console.dir(track)})
         // this.displayMedia.mute()
         this.pub_video.srcObject = this.displayMedia;

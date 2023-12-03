@@ -5,90 +5,44 @@ import Member from "./Member.vue";
 import MeetingMinutes from "./MeetingMinutes.vue";
 import FileList from "./fileList.vue";
 import AI_teaching_assistant from "./AI_teaching_assistant.vue";
+import { event } from "quasar";
 const navSwitchType = ref(false);
 
 //工具是否啟用(預設狀態)
 const show = reactive({
   memberList: false,
-  meetingMinutes: false,
+  // meetingMinutes: false,
   charRoom: true,
-  AI_teaching_assistant: false,
-  userAccount: false,
   fileList: false,
 });
 
-//各工具功能是否顯示
-function ToolOnClick(obj) {
-  //由元素class分類功能
-  if (obj.target.matches(".memberList")) {
-    if (show.memberList == true) {
-      navSwitchType.value = !navSwitchType.value;
-    } else {
-      show.memberList = true;
-      show.meetingMinutes = false;
-      show.charRoom = false;
-      show.AI_teaching_assistant = false;
-      show.userAccount = false;
-      show.fileList = false;
-    }
-  } else if (obj.target.matches(".meetRecord")) {
-    if (show.meetingMinutes == true) {
-      navSwitchType.value = !navSwitchType.value;
-    } else {
-      show.memberList = false;
-      show.meetingMinutes = true;
-      show.charRoom = false;
-      show.AI_teaching_assistant = false;
-      show.userAccount = false;
-      show.fileList = false;
-    }
-  } else if (obj.target.matches(".charRoom")) {
-    if (show.charRoom == true) {
-      navSwitchType.value = !navSwitchType.value;
-    } else {
-      show.memberList = false;
-      show.meetingMinutes = false;
-      show.charRoom = true;
-      show.AI_teaching_assistant = false;
-      show.userAccount = false;
-      show.fileList = false;
-    }
-  } else if (obj.target.matches(".AI_teaching_assistant")) {
-    if (show.AI_teaching_assistant == true) {
-      navSwitchType.value = !navSwitchType.value;
-    } else {
-      show.memberList = false;
-      show.meetingMinutes = false;
-      show.charRoom = false;
-      show.AI_teaching_assistant = true;
-      show.userAccount = false;
-      show.fileList = false;
-    }
-  } else if (obj.target.matches(".userAccount")) {
-    if (show.userAccount == true) {
-      navSwitchType.value = !navSwitchType.value;
-    } else {
-      show.memberList = false;
-      show.meetingMinutes = false;
-      show.charRoom = false;
-      show.AI_teaching_assistant = false;
-      show.userAccount = true;
-      show.fileList = false;
-    }
-  } else if (obj.target.matches(".fileList")) {
-    if (show.fileList == true) {
-      navSwitchType.value = !navSwitchType.value;
-    } else {
-      show.memberList = false;
-      show.meetingMinutes = false;
-      show.charRoom = false;
-      show.AI_teaching_assistant = false;
-      show.userAccount = false;
-      show.fileList = true;
-    }
+function reset_show() {
+  show.memberList = false;
+  // show.meetingMinutes = false;
+  show.charRoom = false;
+  show.fileList = false;
+}
+
+// 各工具功能是否顯示
+function tool_onClick(event, tool_name) {
+  switch (tool_name) {
+    case "memberList":
+      show.memberList ? navSwitchType.value = !navSwitchType.value : (() => {reset_show(); show.memberList = true})();
+      break;
+    // case "meetingMinutes":
+    //   show.meetingMinutes ? navSwitchType.value = !navSwitchType.value : (() => { reset_show(); show.meetingMinutes = true; })()
+    //   break;
+    case "charRoom":
+      show.charRoom ? navSwitchType.value = !navSwitchType.value : (() => { reset_show(); show.charRoom = true; })()
+      break;
+    case "fileList":
+      show.fileList ? navSwitchType.value = !navSwitchType.value : (() => { reset_show(); show.fileList = true; })()
+      break;
+    default:
+      break;
   }
-  //阻止冒泡
-  obj.stopPropagation();
+  // 阻止冒泡
+  event.stopPropagation();
 }
 </script>
 
@@ -102,40 +56,42 @@ function ToolOnClick(obj) {
       <AI_teaching_assistant v-show="show.AI_teaching_assistant" />
     </div>
     <div id="nav" @click="navSwitchType = !navSwitchType">
-      <div class="memberList" id="memberList_Button" @click="ToolOnClick">
-        <q-icon class="memberList" name="groups_3" size="36px"></q-icon>
-        <span class="memberList" id="icon_text">成員</span>
-      </div>
-      <div class="meetRecord" id="meetRecord_Button" @click="ToolOnClick">
-        <q-icon class="meetRecord" name="library_books" size="36px"></q-icon>
-        <span class="meetRecord" id="icon_text">會議紀錄</span>
-      </div>
-      <div class="charRoom" id="charRoom_Button" @click="ToolOnClick">
-        <q-icon class="charRoom" name="chat" size="36px"></q-icon>
-        <span class="charRoom" id="icon_text">聊天室</span>
-      </div>
-      <div class="AI_teaching_assistant" id="AI_teaching_assistant_Button" @click="ToolOnClick">
-        <q-icon class="AI_teaching_assistant" name="school" size="36px"></q-icon>
-        <span class="AI_teaching_assistant" id="icon_text">AI助教</span>
-      </div>
-      <div class="fileList" id="fileList_Button" @click="ToolOnClick">
-        <q-icon class="fileList" name="description" size="36px"></q-icon>
-        <span class="fileList" id="icon_text">檔案</span>
-      </div>
-      <!-- <div class="userAccount" id="userAccount_Button" @click="ToolOnClick">
-        <q-icon class="userAccount" name="account_circle" size="36px"></q-icon>
-        <span class="userAccount" id="icon_text">帳戶</span>
-      </div> -->
+      <q-btn class="btn" @click="tool_onClick($event, 'memberList')" size="100%" no-caps stack unelevated>
+        <q-icon class="btn icon" name="groups_3" size="36px" />
+        <label class="btn label">成員</label>
+      </q-btn>
+      <!-- <q-btn class="btn" @click="tool_onClick($event, 'meetingMinutes')" size="100%" no-caps stack unelevated>
+        <q-icon class="btn icon" name="library_books" size="36px" />
+        <label class="btn label">會議紀錄</label>
+      </q-btn> -->
+      <q-btn class="btn" @click="tool_onClick($event, 'charRoom')" size="100%" no-caps stack unelevated>
+        <q-icon class="btn icon" name="chat" size="36px" />
+        <label class="btn label">聊天室</label>
+      </q-btn>
+      <q-btn class="btn" @click="tool_onClick($event, 'fileList')" size="100%" no-caps stack unelevated>
+        <q-icon class="btn icon" name="description" size="36px" />
+        <label class="btn label">檔案</label>
+      </q-btn>
     </div>
   </div>
 </template>
 
 <style scoped>
+.btn{
+  width: 100%;
+  padding: 0;
+  font-size: 12px;
+  white-space:nowrap;
+}
+.btn:hover{
+  cursor: pointer;
+}
 #body {
   height: 100%;
   display: flex;
   justify-content: right;
 }
+
 #nav {
   height: 100%;
   width: 60px;
@@ -147,6 +103,7 @@ function ToolOnClick(obj) {
   flex-direction: column;
   align-items: center;
 }
+
 #main {
   height: 90%;
   width: 300px;
@@ -155,31 +112,5 @@ function ToolOnClick(obj) {
   border-radius: 30pt 0pt 0pt 30pt;
   background-color: white;
   padding: 5%;
-}
-#memberList_Button,
-#meetRecord_Button,
-#charRoom_Button,
-#AI_teaching_assistant_Button,
-#userAccount_Button,
-#fileList_Button {
-  height: 60px;
-  width: 45px;
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  flex-wrap: wrap;
-}
-#memberList_Button:hover,
-#meetRecord_Button:hover,
-#charRoom_Button:hover,
-#AI_teaching_assistant_Button:hover,
-#userAccount_Button:hover,
-#fileList_Button:hover {
-  cursor: pointer;
-  border-radius: 10pt;
-  background-color: rgb(113, 113, 113);
-}
-#icon_text {
-  font-size: 5pt;
 }
 </style>

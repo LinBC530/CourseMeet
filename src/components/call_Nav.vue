@@ -35,7 +35,7 @@ function raisedHand() {
   });
 }
 function REC_onClick() {
-  if(store.REC()) REC_msg.value = true;
+  if (store.REC()) REC_msg.value = true;
   else REC_msg.value = false;
 }
 // function VideoCamButtonOnClick() {
@@ -69,15 +69,16 @@ function RoomID_OnClick() {
   <div id="botton">
     <div id="left">
       <button class="btn" id="whiteboard" @click="openWhiteBoard">
-        <q-icon
-          class="material-symbols-outlined"
-          name="draw"
-          size="36px"
-          color="black"
-        ></q-icon>
+        <q-icon class="material-symbols-outlined" name="draw" size="36px" color="black"></q-icon>
+        <q-tooltip style="font-size: 12px;">多人白板</q-tooltip>
       </button>
       <div id="RoomID">
-        <span @click="RoomID_OnClick">{{ Meeting.RoomID }}</span>
+        <span @click="RoomID_OnClick">
+          {{ Meeting.RoomID }}
+          <q-tooltip style="font-size: 12px;">
+            複製會議代碼
+          </q-tooltip>
+        </span>
       </div>
       <!-- <button class="btn" id="web">
         <q-icon
@@ -90,11 +91,10 @@ function RoomID_OnClick() {
     </div>
     <div id="center">
       <button id="end_Call" @click="end">
-        <q-icon
-          class="material-symbols-outlined"
-          name="call_end"
-          size="36px"
-        ></q-icon>
+        <q-icon class="material-symbols-outlined" name="call_end" size="36px"></q-icon>
+        <q-tooltip style="font-size: 12px;">
+          離開討論
+        </q-tooltip>
       </button>
     </div>
     <div id="right">
@@ -108,30 +108,21 @@ function RoomID_OnClick() {
         ></q-icon>
       </button> -->
       <button class="btn" id="Mic" @click="MicButtonOnClick">
-        <q-icon
-          class="material-symbols-outlined"
-          :name="mic_isOpen ? 'mic' : 'mic_off'"
-          :color="mic_isOpen ? 'grey-10' : 'red'"
-          size="36px"
-          color="black"
-        ></q-icon>
+        <q-icon class="material-symbols-outlined" :name="mic_isOpen ? 'mic' : 'mic_off'"
+          :color="mic_isOpen ? 'grey-10' : 'red'" size="36px" color="black"></q-icon>
+        <q-tooltip v-if="mic_isOpen" style="font-size: 12px;">關閉麥克風</q-tooltip>
+        <q-tooltip v-else style="font-size: 12px;">開啟麥克風</q-tooltip>
       </button>
       <button class="btn" id="Present" @click="store.set_Pub_video_src()">
-        <q-icon
-          class="material-symbols-outlined"
-          name="present_to_all"
-          size="36px"
-          color="black"
-        ></q-icon>
+        <q-icon class="material-symbols-outlined" name="present_to_all" size="36px" :color="store.isPub? 'blue' : 'black'"></q-icon>
+        <q-tooltip v-if="store.isPub" style="font-size: 12px;">停止分享螢幕畫面</q-tooltip>
+        <q-tooltip v-else style="font-size: 12px;">分享螢幕畫面</q-tooltip>
       </button>
       <button class="btn" id="REC" @click="REC_onClick">
-        <q-icon
-          class="material-symbols-outlined"
-          name="radio_button_checked "
-          :color="store.isREC ? 'red' : 'grey-10'"
-          size="36px"
-          color="black"
-        ></q-icon>
+        <q-icon class="material-symbols-outlined" name="radio_button_checked " :color="store.isREC ? 'red' : 'grey-10'"
+          size="36px" color="black"></q-icon>
+        <q-tooltip v-if="store.isREC" style="font-size: 12px;">停止錄製螢幕畫面</q-tooltip>
+        <q-tooltip v-else style="font-size: 12px;">錄製螢幕畫面</q-tooltip>
       </button>
       <q-dialog v-model="REC_msg" seamless position="top">
         <q-card style="width: 400px; background-color: rgb(67, 67, 67)">
@@ -143,12 +134,8 @@ function RoomID_OnClick() {
         </q-card>
       </q-dialog>
       <button class="btn" id="raised_hand" @click="raisedHand">
-        <q-icon
-          class="material-symbols-outlined"
-          name="pan_tool"
-          size="36px"
-          color="black"
-        ></q-icon>
+        <q-icon class="material-symbols-outlined" name="pan_tool" size="36px" color="black"></q-icon>
+        <q-tooltip style="font-size: 12px;">舉手</q-tooltip>
       </button>
     </div>
   </div>
@@ -164,12 +151,14 @@ function RoomID_OnClick() {
   background-color: rgb(240, 240, 240);
   border-radius: 20pt 20pt 0pt 0pt;
 }
+
 #left {
   height: 100%;
   width: 45%;
   display: flex;
   align-items: center;
 }
+
 #center {
   height: 100%;
   width: 10%;
@@ -177,20 +166,24 @@ function RoomID_OnClick() {
   align-items: center;
   justify-content: center;
 }
+
 #right {
   height: 100%;
   width: 45%;
   display: flex;
   align-items: center;
 }
+
 #RoomID {
   width: 100%;
   text-align: center;
   font-size: 20px;
 }
+
 #RoomID span:hover {
   cursor: pointer;
 }
+
 .btn {
   height: 50px;
   width: 50px;
@@ -204,10 +197,12 @@ function RoomID_OnClick() {
   margin: 0pt 3px;
   fill: rgb(50, 50, 50);
 }
+
 .btn:hover {
   cursor: pointer;
   background-color: rgb(205, 205, 205);
 }
+
 #end_Call {
   height: 40pt;
   width: 40pt;
@@ -219,6 +214,7 @@ function RoomID_OnClick() {
   color: white;
   background-color: red;
 }
+
 #end_Call:hover {
   cursor: pointer;
   background-color: rgb(200, 0, 0);

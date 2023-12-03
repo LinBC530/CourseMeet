@@ -35,8 +35,8 @@ onMounted(() => {
   if (!store.isPub) {
     client.ontrack = (track, stream) => {
       // Streams.userMider.push({media: stream, active: stream.active});
-      console.dir(track);
-      // console.dir(stream)
+      // console.dir(track);
+      console.dir(stream);
 
       // 將正在分享之畫面停止播放及停止分享
       if (store.isPub) store.stop_pub_video_src();

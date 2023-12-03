@@ -53,7 +53,7 @@ form {
   height: 60%;
 }
 #button {
-  width: 100%;
+  width: calc(100% - 20pt);
   margin: 10pt;
   display: flex;
   justify-content: center;

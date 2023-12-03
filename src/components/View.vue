@@ -7,16 +7,19 @@ const store = useScreenVideo();
 
 const sub_video = ref();
 const pub_video = ref();
-const isPub = ref(false);
+// const isPub = ref(false);
 // const sub_video_userMedia = ref();
 // const pub_video_userMedia = ref();
-const Streams = reactive({
-  userMider: [],
-  displayMider: [],
-});
+// const Streams = reactive({
+//   userMider: [],
+//   displayMider: [],
+// });
 
+// 連接至ion-sfu服務
 const signal = new IonSFUJSONRPCSignal("wss://localhost:7000/ws");
 const client = new Client(signal);
+
+// 連接ion-sfu伺服端成功後將client加入會議
 signal.onopen = () => {
   store.joinRoom();
 };
@@ -26,16 +29,19 @@ onMounted(() => {
   store.pub_video = pub_video;
   store.client = client;
 
-  // store.getUserMedia();
+  store.getUserMedia();
 
   // 本機端未分享畫面時等待track被調用
   if (!store.isPub) {
     client.ontrack = (track, stream) => {
       // Streams.userMider.push({media: stream, active: stream.active});
+      console.dir(track);
+      // console.dir(stream)
 
       // 將正在分享之畫面停止播放及停止分享
       if (store.isPub) store.stop_pub_video_src();
 
+      console.dir(stream);
       // 設置接收到的影像
       store.sub_video.srcObject = stream;
       store.sub_video.autoplay = true;
@@ -60,20 +66,20 @@ onMounted(() => {
   <div id="View_main">
     <div id="View">
       <!-- <div id="left"> -->
-        <video
-          class="displayMider"
-          ref="pub_video"
-          autoplay
-          controls
-          v-show="store.isPub"
-        ></video>
-        <video
-          class="displayMider"
-          ref="sub_video"
-          autoplay
-          controls
-          v-show="!store.isPub"
-        ></video>
+      <video
+        class="displayMider"
+        ref="pub_video"
+        autoplay
+        controls
+        v-show="store.isPub"
+      ></video>
+      <video
+        class="displayMider"
+        ref="sub_video"
+        autoplay
+        controls
+        v-show="!store.isPub"
+      ></video>
       <!-- </div>
       <div id="right">
         <div id="right_top">

@@ -10,6 +10,7 @@ let drawing = false;
 const tool = reactive({
   type: "brush",
   size: 2,
+  color: 'black'
 });
 const current = reactive({
   x: 0,

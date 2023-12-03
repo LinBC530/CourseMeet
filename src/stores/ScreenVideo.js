@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { LocalStream, Client } from "ion-sdk-js";
 import { useMeetingData } from "./Meeting";
-import { api } from "../boot/axios";
+// import { api } from "../boot/axios";
 
 const Meeting = useMeetingData();
 export const useScreenVideo = defineStore("counter", {
@@ -13,7 +13,7 @@ export const useScreenVideo = defineStore("counter", {
     // sub_video_userMedia: null,
     // pub_video_userMedia: null,
     client: null,
-    // userMedia: null,
+    userMedia: null,
     displayMedia: null,
     mediaRecorder: null,
   }),
@@ -21,17 +21,18 @@ export const useScreenVideo = defineStore("counter", {
   getters: {},
   actions: {
     // 聲音開關
-    // soundSwitch(isMute) {
-    //   isMute ? this.userMedia.unmute() : this.userMedia.mute();
-    // },
-    // 取得目前設備之鏡頭及麥克風
+    soundSwitch(isMute) {
+      isMute ? this.userMedia.getAudioTracks()[0].enabled = true : this.userMedia.getAudioTracks()[0].enabled = false;
+    },
+    // 取得目前設備之麥克風
     async getUserMedia() {
       this.userMedia = await LocalStream.getUserMedia({
-        resolution: "vga",
-        video: true,
-        audio: false,
-        codec: "vp8",
+        // resolution: "vga",
+        video: false,
+        audio: true,
+        // codec: "vp8",
       }).catch(() => null);
+      // this.userMedia = test;
     },
     stop_pub_video_src() {
       if (this.displayMedia) {
@@ -86,7 +87,11 @@ export const useScreenVideo = defineStore("counter", {
         });
         console.dir(this.displayMedia)
         this.isPub = true;
+        this.displayMedia.addTrack(this.userMedia.getAudioTracks()[0])
+        this.displayMedia.getTracks().forEach((track) => {console.dir(track)})
+        // this.displayMedia.mute()
         this.pub_video.srcObject = this.displayMedia;
+        this.pub_video.srcObject.mute()
         this.client.publish(this.displayMedia);
         this.displayMedia.getTracks().forEach((track) => {
           // 停止分享被點擊時停止分享畫面

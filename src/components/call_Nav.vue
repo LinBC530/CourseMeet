@@ -13,7 +13,7 @@ const Meeting = useMeetingData();
 const UserData = useUserData();
 const router = useRouter();
 const socket = Meeting.socket;
-// const mic_isOpen = ref(false);
+const mic_isOpen = ref(false);
 // const cam_isOpen = ref(false);
 const REC_isOpen = ref(false);
 const ShareScreen_isOpen = ref(false);
@@ -42,10 +42,10 @@ function REC_onClick() {
 //   cam_isOpen.value = !cam_isOpen.value;
 //   store.set_sub_video_src(cam_isOpen.value);
 // }
-// function MicButtonOnClick() {
-//   mic_isOpen.value = !mic_isOpen.value;
-//   store.soundSwitch(mic_isOpen.value);
-// }
+function MicButtonOnClick() {
+  mic_isOpen.value = !mic_isOpen.value;
+  store.soundSwitch(mic_isOpen.value);
+}
 // function ShareScreenButtonOnClick() {
 //   // ShareScreen_isOpen.value = !ShareScreen_isOpen.value;
 //   // store.set_Pub_video_src(ShareScreen_isOpen.value);
@@ -106,7 +106,7 @@ function RoomID_OnClick() {
           size="36px"
           color="black"
         ></q-icon>
-      </button>
+      </button> -->
       <button class="btn" id="Mic" @click="MicButtonOnClick">
         <q-icon
           class="material-symbols-outlined"
@@ -115,7 +115,7 @@ function RoomID_OnClick() {
           size="36px"
           color="black"
         ></q-icon>
-      </button> -->
+      </button>
       <button class="btn" id="Present" @click="store.set_Pub_video_src()">
         <q-icon
           class="material-symbols-outlined"

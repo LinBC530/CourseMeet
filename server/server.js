@@ -95,7 +95,7 @@ io.on("connection", async (socket) => {
     }
   });
 
-  //繪圖用
+  // 繪圖用
   socket.on("drawing", (data) => {
     socket.broadcast.emit("drawing", data);
     console.log(data);

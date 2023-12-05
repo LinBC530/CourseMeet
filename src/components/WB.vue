@@ -1,34 +1,81 @@
 <script setup>
 import { ref, reactive, onMounted } from "vue";
-import { useMeetingData } from "src/stores/Meeting";
+import io from "socket.io-client";
+// 引入 drawing pinia
+import { useDrawData } from "src/stores/drawing"
+// 引入pinia解構方法
+import { storeToRefs } from "pinia";
 
-const Meeting = useMeetingData();
-const socket = Meeting.socket;
-const canvas = ref();
-var context = null;
-let drawing = false;
+const socket = io("https://localhost:3000", { transports: ['websocket'] });
+// 使用 drawing pinia
+const Draw = useDrawData();
+// 解構draw canvas，解構後為ref物件，使用時須加上.value (ex: canvas.value)，不解構則加上Draw (Draw.canvas)
+const { canvas } = storeToRefs(Draw)
+
+let context = null;
+// 是否正在繪圖
+let isDrawing = false;
+// 工具狀態
 const tool = reactive({
+  // 畫筆、橡皮擦、三角形、長方形、圓形...
   type: "brush",
+  // 筆刷粗細
   size: 2,
+  // 筆刷顏色
   color: 'black'
 });
-const current = reactive({
-  x: 0,
-  y: 0,
-  color: "black",
-});
+const current = reactive({ x: 0, y: 0, });
+
+// 接收繪圖資料
+socket.on("drawing", (data) => drawing(data));
+
+// 繪製圖形
+function drawing(data) {
+  // 取得目前畫布大小，以根據畫布大小還原圖形
+  const w = canvas.value.width;
+  const h = canvas.value.height;
+  // 判斷要繪製的圖形種類
+  switch (data.type) {
+    // 線條
+    case 'Line':
+      drawLine(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.size, data.color, false)
+      break;
+    // 橡皮擦
+    case 'eraser':
+      eraser(data.x * w, data.y * h, data.size, false);
+      break;
+    // 三角形
+    case 'triangle':
+      drawTriangle(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color, data.size, false);
+      break;
+    // 長方形
+    case 'rectangle':
+      drawRectangle(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color, data.size, false);
+      break;
+    // 圓形
+    case 'circle':
+      drawCircle(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color, data.size, false);
+      break;
+    case 'text':
+      drawText(data.x * w, data.y * h, 'hello world', data.size, 'Comic Sans MS', data.color, false)
+    default:
+      break;
+  }
+}
 
 onMounted(() => {
   // canvas
   context = canvas.value.getContext("2d");
-  console.dir(canvas.value);
   canvas.value.addEventListener("mousedown", onMouseDown, false);
   canvas.value.addEventListener("mouseup", onMouseUp, false);
   canvas.value.addEventListener("mouseout", onMouseUp, false);
   canvas.value.addEventListener("mousemove", throttle(onMouseMove, 10), false);
-  onResize();
+  // 設定實際上畫布大小(js)等於視覺上畫布大小(css)
+  canvas.value.width = canvas.value.clientWidth;
+  canvas.value.height = canvas.value.clientHeight;
 });
 
+// 下載繪圖
 function donwload_as_png() {
   canvas.value.toBlob((blob) => {
     const link = document.createElement("a");
@@ -39,72 +86,33 @@ function donwload_as_png() {
   });
 }
 
-function drawLine(x0, y0, x1, y1, color, emit) {
-  console.log(x0, y0, x1, y1, color, emit);
-  context.beginPath();
-  context.moveTo(x0, y0);
-  context.lineTo(x1, y1);
-  context.strokeStyle = color;
-  context.lineWidth = tool.size;
-  context.stroke();
-  context.closePath();
-  if (!emit) {
-    return;
-  }
-  var w = canvas.value.width;
-  var h = canvas.value.height;
-  socket.emit("drawing", {
-    x0: x0 / w,
-    y0: y0 / h,
-    x1: x1 / w,
-    y1: y1 / h,
-    color: color,
-  });
-}
-
-function eraser(x, y, size) {
-  context.clearRect(x - size * 5, y - size * 5, size * 10, size * 10);
-}
-
 function onMouseDown(e) {
-  console.log(e);
-  drawing = true;
+  // snapshot = context.getImageData(0, 0, canvas.value.width, canvas.value.height);
+  isDrawing = true;
   current.x = e.offsetX;
   current.y = e.offsetY;
-  if (tool.type == "eraser") eraser(e.offsetX, e.offsetY, tool.size);
-  // switch (tool.type) {
-  //   case "brush":
-  //     current.x = e.offsetX;
-  //     current.y = e.offsetY;
-  //     console.log(e.offsetX, e.offsetY);
-  //     break;
-  //   case "eraser":
-  //     eraser(e.offsetX, e.offsetY, tool.size);
-  //     break;
-  //   default:
-  //     break;
-  // }
+  if (tool.type == "eraser") eraser(e.offsetX, e.offsetY, tool.size, true);
+  else if (tool.type == 'text') drawText(e.offsetX, e.offsetY, 'hello world', tool.size, 'Comic Sans MS', tool.color, true);
 }
 
 function onMouseUp(e) {
-  if (!drawing) return;
-  drawing = false;
+  if (!isDrawing) return;
+  isDrawing = false;
   switch (tool.type) {
     case "brush":
-      drawLine(
-        current.x,
-        current.y,
-        e.offsetX,
-        e.offsetY,
-        current.color,
-        false
-      );
+      drawLine(current.x, current.y, e.offsetX, e.offsetY, tool.size, tool.color, true);
       break;
     case "eraser":
-      eraser(e.offsetX, e.offsetY, tool.size);
+      eraser(e.offsetX, e.offsetY, tool.size, true);
       break;
-    case "Triangle":
-      drawTriangle(e);
+    case "triangle":
+      drawTriangle(current.x, current.y, e.offsetX, e.offsetY, tool.color, tool.size, true);
+      break;
+    case 'rectangle':
+      drawRectangle(current.x, current.y, e.offsetX, e.offsetY, tool.color, tool.size, true);
+      break;
+    case 'circle':
+      drawCircle(current.x, current.y, e.offsetX, e.offsetY, tool.color, tool.size, true);
       break;
     default:
       break;
@@ -112,18 +120,27 @@ function onMouseUp(e) {
 }
 
 function onMouseMove(e) {
-  if (!drawing) return;
+  if (!isDrawing) return;
   switch (tool.type) {
     case "brush":
-      drawLine(current.x, current.y, e.offsetX, e.offsetY, current.color, true);
+      drawLine(current.x, current.y, e.offsetX, e.offsetY, tool.size, tool.color, true);
       current.x = e.offsetX;
       current.y = e.offsetY;
       break;
     case "eraser":
-      eraser(e.offsetX, e.offsetY, tool.size);
+      eraser(e.offsetX, e.offsetY, tool.size, true);
       break;
-    // case "Triangle":
-    //   drawTriangle(e);
+    // case "triangle":
+    //   context.putImageData(snapshot, 0, 0);
+    //   drawTriangle(current.x, e.offsetX, current.y, e.offsetY, tool.color, tool.size, true);
+    //   break;
+    // case 'rectangle':
+    //   context.putImageData(snapshot, 0, 0);
+    //   drawRectangle(current.x, current.y, e.offsetX, e.offsetY, tool.color, tool.size, true);
+    //   break;
+    // case 'circle':
+    //   context.putImageData(snapshot, 0, 0);
+    //   drawCircle(current.x, current.y, e.offsetX, e.offsetY, tool.color, tool.size, true);
     //   break;
     default:
       break;
@@ -141,26 +158,144 @@ function throttle(callback, delay) {
   };
 }
 
-// function onDrawingEvent(data) {
-//   var w = canvas.value.width;
-//   var h = canvas.value.height;
-//   drawLine(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color);
-// }
+// 畫筆
+function drawLine(x0, y0, x1, y1, size, color, emit) {
+  context.beginPath();
+  context.moveTo(x0, y0);
+  context.lineTo(x1, y1);
+  context.strokeStyle = color;
+  context.lineWidth = size ? size : tool.size;
+  context.stroke();
+  context.closePath();
+  if (!emit) {
+    return;
+  }
+  let w = canvas.value.width;
+  let h = canvas.value.height;
+  socket.emit("drawing", {
+    type: 'Line',
+    x0: x0 / w,
+    y0: y0 / h,
+    x1: x1 / w,
+    y1: y1 / h,
+    color: color,
+    size: tool.size,
+    emit: false,
+  });
+}
 
-function onResize() {
-  canvas.value.width = canvas.value.clientWidth;
-  canvas.value.height = canvas.value.clientHeight;
+// 橡皮擦
+function eraser(x, y, size, emit) {
+  context.clearRect(x - size * 5, y - size * 5, size * 10, size * 10);
+  if (!emit) {
+    return;
+  }
+  let w = canvas.value.width;
+  let h = canvas.value.height;
+  socket.emit("drawing", {
+    type: 'eraser',
+    x: x / w,
+    y: y / h,
+    size: tool.size,
+    emit: false,
+  });
 }
 
 // 畫三角形
-const drawTriangle = (e) => {
+function drawTriangle(x0, y0, x1, y1, color, size, emit) {
   context.beginPath();
-  context.moveTo(current.x, current.y);
-  context.lineTo(e.offsetX, e.offsetY);
-  context.lineTo(current.x * 2 - e.offsetX, e.offsetY);
+  context.strokeStyle = color;
+  context.lineWidth = size ? size : tool.size;
+  context.moveTo(x0, y0);
+  context.lineTo(x1, y1);
+  context.lineTo(x0 * 2 - x1, y1);
   context.closePath();
   context.stroke();
+  if (!emit) {
+    return;
+  }
+  let w = canvas.value.width;
+  let h = canvas.value.height;
+  socket.emit("drawing", {
+    type: 'triangle',
+    x0: x0 / w,
+    y0: y0 / h,
+    x1: x1 / w,
+    y1: y1 / h,
+    color: color,
+    size: tool.size,
+    emit: false,
+  });
 };
+
+// 畫長方形
+function drawRectangle(x0, y0, x1, y1, color, size, emit) {
+  context.strokeStyle = color;
+  context.lineWidth = size ? size : tool.size;
+  context.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  if (!emit) {
+    return;
+  }
+  const w = canvas.value.width;
+  const h = canvas.value.height;
+  socket.emit("drawing", {
+    type: 'rectangle',
+    x0: x0 / w,
+    y0: y0 / h,
+    x1: x1 / w,
+    y1: y1 / h,
+    color: color,
+    size: tool.size,
+    emit: false
+  });
+
+}
+
+// 畫圓形
+function drawCircle(x0, y0, x1, y1, color, size, emit) {
+  context.beginPath();
+  context.strokeStyle = color;
+  context.lineWidth = size ? size : tool.size;
+  let radius = Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
+  context.arc(x0, y0, radius, 0, Math.PI * 2);
+  context.stroke();
+  if (!emit) {
+    return;
+  }
+  const w = canvas.value.width;
+  const h = canvas.value.height;
+  socket.emit("drawing", {
+    type: 'circle',
+    x0: x0 / w,
+    y0: y0 / h,
+    x1: x1 / w,
+    y1: y1 / h,
+    color: color,
+    size: tool.size,
+    emit: false,
+  });
+}
+
+// 畫文字
+function drawText(x, y, text, size, font, color, emit) {
+  context.textAlign = 'left';
+  context.font = (size * 10).toString() + 'px ' + font
+  context.fillStyle = color;
+  context.fillText(text, x, y, context.measureText(text).width);
+  if (!emit) {
+    return;
+  }
+  const w = canvas.value.width;
+  const h = canvas.value.height;
+  socket.emit("drawing", {
+    type: 'text',
+    x: x / w,
+    y: y / h,
+    color: color,
+    size: tool.size,
+    emit: false,
+  });
+}
 </script>
 
 <template>
@@ -172,16 +307,16 @@ const drawTriangle = (e) => {
             <span>圖形</span>
           </div>
           <div class="toolbox tools">
-            <q-btn-group unelevated>
-              <q-btn
-                size="lg"
-                icon="change_history"
-                @click="tool.type = 'Triangle'"
-                stack
-              />
-              <q-btn size="lg" icon="crop_square" stack />
-              <q-btn size="lg" icon="radio_button_unchecked" stack />
-            </q-btn-group>
+            <div class="toolbox tools group">
+              <q-btn-group unelevated>
+                <q-btn size="lg" icon="change_history" @click="tool.type = 'triangle'" stack />
+                <q-btn size="lg" icon="crop_square" @click="tool.type = 'rectangle'" stack />
+                <q-btn size="lg" icon="radio_button_unchecked" @click="tool.type = 'circle'" stack />
+              </q-btn-group>
+              <q-btn-group unelevated>
+                <q-btn size="lg" icon="title" @click="tool.type = 'text'" stack />
+              </q-btn-group>
+            </div>
           </div>
         </q-card-section>
 
@@ -192,17 +327,11 @@ const drawTriangle = (e) => {
           <div class="toolbox tools">
             <q-btn-group unelevated>
               <q-btn size="md" icon="create" @click="tool.type = 'brush'" stack>
-                <span style="font-size: 8px">畫筆</span>
+                <label style="font-size: 12px;cursor: pointer;">畫筆</label>
               </q-btn>
-              <q-btn
-                size="md"
-                icon="crop_portrait"
-                @click="tool.type = 'eraser'"
-                stack
-              >
-                <span style="font-size: 8px">橡皮擦</span></q-btn
-              >
-              <!-- <q-btn size="lg" label="?" stack /> -->
+              <q-btn size="md" icon="crop_portrait" @click="tool.type = 'eraser'" stack>
+                <label style="font-size: 12px;cursor: pointer;">橡皮擦</label>
+              </q-btn>
             </q-btn-group>
           </div>
         </q-card-section>
@@ -212,13 +341,7 @@ const drawTriangle = (e) => {
             <span>工具大小</span>
           </div>
           <div class="toolbox tools">
-            <q-slider
-              style="width: 80%"
-              v-model="tool.size"
-              :min="2"
-              :max="20"
-              label
-            />
+            <q-slider style="width: 80%" v-model="tool.size" :min="2" :max="20" label />
           </div>
         </q-card-section>
 
@@ -230,54 +353,25 @@ const drawTriangle = (e) => {
             <div style="border: 2px; display: flex">
               <div style="border: 2px">
                 <div style="display: flex">
-                  <button
-                    class="color"
-                    style="background-color: black"
-                    @click="current.color = 'black'"
-                  />
-                  <button
-                    class="color"
-                    style="background-color: red"
-                    @click="current.color = 'red'"
-                  />
-                  <button
-                    class="color"
-                    style="background-color: blue"
-                    @click="current.color = 'blue'"
-                  />
+                  <button class="color" style="background-color: black" @click="tool.color = 'black'" />
+                  <button class="color" style="background-color: red" @click="tool.color = 'red'" />
+                  <button class="color" style="background-color: blue" @click="tool.color = 'blue'" />
                 </div>
                 <div style="display: flex">
-                  <button
-                    class="color"
-                    style="background-color: blueviolet"
-                    @click="current.color = 'blueviolet'"
-                  />
-                  <button
-                    class="color"
-                    style="background-color: gold"
-                    @click="current.color = 'gold'"
-                  />
-                  <button
-                    class="color"
-                    style="background-color: green"
-                    @click="current.color = 'green'"
-                  />
+                  <button class="color" style="background-color: blueviolet" @click="tool.color = 'blueviolet'" />
+                  <button class="color" style="background-color: gold" @click="tool.color = 'gold'" />
+                  <button class="color" style="background-color: green" @click="tool.color = 'green'" />
                 </div>
               </div>
-              <div
-                style="
+              <div style="
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                "
-              >
-                <button
-                  class="color palette"
-                  :style="{ backgroundColor: current.color }"
-                >
+                ">
+                <button class="color palette" :style="{ backgroundColor: tool.color }">
                   <q-icon name="palette" size="md" />
                   <q-popup-proxy>
-                    <q-color v-model="current.color" no-header no-footer flat />
+                    <q-color v-model="tool.color" no-header no-footer flat />
                   </q-popup-proxy>
                 </button>
               </div>
@@ -286,12 +380,7 @@ const drawTriangle = (e) => {
         </q-card-section>
         <q-card-section>
           <center>
-            <q-btn
-              style="width: 80%"
-              color="green"
-              label="Donwload"
-              @click="donwload_as_png"
-            />
+            <q-btn style="width: 80%" color="green" label="Donwload" @click="donwload_as_png" />
           </center>
         </q-card-section>
       </q-card>
@@ -317,21 +406,31 @@ const drawTriangle = (e) => {
   width: 20%;
   padding: 10px;
 }
+
 #toolBar {
   height: 100%;
 }
+
 .toolbox {
   padding-bottom: 0;
 }
+
 .toolbox.title {
   padding-bottom: 5px;
   font-size: 16px;
 }
+
 .toolbox.tools {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
+
+.toolbox.tools.group {
+  align-items: start;
+}
+
 .color {
   height: 30px;
   width: 30px;
@@ -339,6 +438,7 @@ const drawTriangle = (e) => {
   border: 0px;
   border-radius: 5px;
 }
+
 .color.palette {
   height: 50px;
   width: 50px;
@@ -352,6 +452,7 @@ const drawTriangle = (e) => {
   width: 80%;
   padding: 10px;
 }
+
 #canvas {
   height: 100%;
   width: 100%;

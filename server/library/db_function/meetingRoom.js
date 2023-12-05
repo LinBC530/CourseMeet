@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
-const { client, Data } = require("./mongo.js")
+const { client, Data } = require("./mongo.js");
+const { creatChatRoom } = require("./chatRoom.js");
 
 module.exports = {
   creatMeetingRoom,
@@ -22,6 +23,7 @@ async function creatMeetingRoom(teacherID) {
       ChatRoomID: chatRoomID,
     };
     const result = await Users.insertOne(data_in);
+    console.dir(result)
     //收到DB資料
     if (result) {
       data_out.success({
@@ -35,8 +37,9 @@ async function creatMeetingRoom(teacherID) {
       data_out.fail("發生錯誤，請稍後再試");
       return data_out;
     }
-  } catch {
+  } catch(e) {
     //此方法發生錯誤
+    console.dir(e)
     data_out.fail("發生錯誤，請稍後再試");
     return data_out;
   }

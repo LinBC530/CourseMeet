@@ -15,5 +15,8 @@ export const useMeetingData = defineStore("useMeetingData", {
       this.teacher = teacher;
       this.studens = studens;
     },
+    socket_connect() {
+      this.socket.connect();
+    }
   },
 });

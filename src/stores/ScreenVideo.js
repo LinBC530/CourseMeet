@@ -45,8 +45,8 @@ export const useScreenVideo = defineStore("counter", {
       }).catch(() => null);
     },
     stop_all_media() {
-      this.displayMedia.getTracks().forEach(track => {track.stop()});
-      this.userMedia.getTracks().forEach(track => {track.stop()});
+      if (this.displayMedia) this.displayMedia.getTracks().forEach(track => {track.stop()});
+      if (this.userMedia) this.userMedia.getTracks().forEach(track => {track.stop()});
     },
     stop_pub_video_src() {
       console.dir("stop1");

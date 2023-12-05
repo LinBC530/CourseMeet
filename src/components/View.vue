@@ -2,7 +2,7 @@
 import { Client } from "ion-sdk-js";
 import { IonSFUJSONRPCSignal } from "ion-sdk-js/lib/signal/json-rpc-impl";
 import { useScreenVideo } from "src/stores/ScreenVideo";
-import { ref, reactive, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 const store = useScreenVideo();
 
 const sub_video = ref();
@@ -24,37 +24,44 @@ signal.onopen = () => {
   store.joinRoom();
 };
 
+onUnmounted(() => {
+  store.stop_all_media()
+})
+
 onMounted(() => {
   store.sub_video = sub_video;
   store.pub_video = pub_video;
   store.client = client;
 
-  store.getUserMedia();
+  // store.getUserMedia();
 
   // 本機端未分享畫面時等待track被調用
   if (!store.isPub) {
     client.ontrack = (track, stream) => {
-      // Streams.userMider.push({media: stream, active: stream.active});
-      // console.dir(track);
+      // 只在收到視訊時才執行，避免執行多次
+      if (track.kind == 'video') {
+        store.client_Stream = stream;
+
+        // 將正在分享之畫面停止播放及停止分享
+        if (store.isPub) store.stop_pub_video_src();
+
+        // 設置接收到的影像
+        store.sub_video.srcObject = stream;
+        store.sub_video.autoplay = true;
+
+        // track被移除時停止顯示畫面
+        stream.onremovetrack = () => {
+          // stream.getTracks().forEach(track => {console.dir(track);track.stop();stream.removeTrack(track);})
+          console.dir(stream.getTracks());
+          store.sub_video.srcObject = null;
+          // console.dir("removetrack")
+        };
+      }
+
+      console.dir('client')
+      console.dir(stream.getTracks());
+      console.dir(track);
       console.dir(stream);
-
-      // 將正在分享之畫面停止播放及停止分享
-      if (store.isPub) store.stop_pub_video_src();
-
-      console.dir(stream);
-      // 設置接收到的影像
-      store.sub_video.srcObject = stream;
-      store.sub_video.autoplay = true;
-
-      // track被移除時停止顯示畫面
-      stream.onremovetrack = () => {
-        store.sub_video.srcObject = null;
-        // console.dir("removetrack")
-      };
-      // stream.oninactive = () => {
-      //   store.sub_video.srcObject = null;
-      //   console.dir("inactive");
-      // };
     };
   }
 });
@@ -66,20 +73,8 @@ onMounted(() => {
   <div id="View_main">
     <div id="View">
       <!-- <div id="left"> -->
-      <video
-        class="displayMider"
-        ref="pub_video"
-        autoplay
-        controls
-        v-show="store.isPub"
-      ></video>
-      <video
-        class="displayMider"
-        ref="sub_video"
-        autoplay
-        controls
-        v-show="!store.isPub"
-      ></video>
+      <video class="displayMider" ref="pub_video" autoplay controls v-show="store.isPub"></video>
+      <video class="displayMider" ref="sub_video" autoplay controls v-show="!store.isPub"></video>
       <!-- </div>
       <div id="right">
         <div id="right_top">
@@ -111,6 +106,7 @@ onMounted(() => {
   min-height: 400pt;
   min-width: 800pt;
 }
+
 #View {
   display: flex;
   align-items: center;
@@ -118,24 +114,29 @@ onMounted(() => {
   height: 100%;
   width: 100%;
 }
+
 #left {
   height: 100%;
   width: 80%;
 }
+
 #right {
   height: 100%;
   border-radius: 10px;
   background-color: rgb(180, 180, 180);
 }
+
 #right_top {
   padding: 10px;
   border: 3px solid rgb(50, 50, 50);
   border-radius: 10px;
   background-color: rgb(88, 88, 88);
 }
+
 #rigth_button {
   padding: 10px;
 }
+
 video {
   display: flex;
   align-items: center;
@@ -143,13 +144,16 @@ video {
   border-radius: 5px;
   background-color: rgb(50, 50, 50);
 }
+
 video::-webkit-media-controls-enclosure {
   display: none;
 }
+
 .displayMider {
   height: 100%;
   width: 100%;
 }
+
 .userMider {
   height: 150px;
   width: 250px;

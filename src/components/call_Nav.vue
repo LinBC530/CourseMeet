@@ -13,10 +13,10 @@ const Meeting = useMeetingData();
 const UserData = useUserData();
 const router = useRouter();
 const socket = Meeting.socket;
-const mic_isOpen = ref(false);
+// const mic_isOpen = ref(false);
 // const cam_isOpen = ref(false);
-const REC_isOpen = ref(false);
-const ShareScreen_isOpen = ref(false);
+// const REC_isOpen = ref(false);
+// const ShareScreen_isOpen = ref(false);
 
 function end() {
   router.push({ path: "Main/Exit" });
@@ -43,8 +43,8 @@ function REC_onClick() {
 //   store.set_sub_video_src(cam_isOpen.value);
 // }
 function MicButtonOnClick() {
-  mic_isOpen.value = !mic_isOpen.value;
-  store.soundSwitch(mic_isOpen.value);
+  store.isOpenMic = !store.isOpenMic;
+  store.soundSwitch();
 }
 // function ShareScreenButtonOnClick() {
 //   // ShareScreen_isOpen.value = !ShareScreen_isOpen.value;
@@ -107,10 +107,10 @@ function RoomID_OnClick() {
           color="black"
         ></q-icon>
       </button> -->
-      <button class="btn" id="Mic" @click="MicButtonOnClick">
-        <q-icon class="material-symbols-outlined" :name="mic_isOpen ? 'mic' : 'mic_off'"
-          :color="mic_isOpen ? 'grey-10' : 'red'" size="36px" color="black"></q-icon>
-        <q-tooltip v-if="mic_isOpen" style="font-size: 12px;">關閉麥克風</q-tooltip>
+      <button v-show="store.isPub" class="btn" id="Mic" @click="MicButtonOnClick">
+        <q-icon class="material-symbols-outlined" :name="store.isOpenMic ? 'mic' : 'mic_off'"
+          :color="store.isOpenMic ? 'grey-10' : 'red'" size="36px" color="black"></q-icon>
+        <q-tooltip v-if="store.isOpenMic" style="font-size: 12px;">關閉麥克風</q-tooltip>
         <q-tooltip v-else style="font-size: 12px;">開啟麥克風</q-tooltip>
       </button>
       <button class="btn" id="Present" @click="store.set_Pub_video_src()">

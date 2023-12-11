@@ -2,7 +2,7 @@ const OpenAI = require("openai").default;
 const openai = new OpenAI({
   apiKey: "API_KEY",
 });
-const express = require('express')
+const express = require("express");
 const DB = require("./library/db_function/main");
 const { app } = require("./library/api/main");
 const fs = require("fs");
@@ -17,7 +17,7 @@ const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 3000;
 
 // 使用網站檔案
-app.use(express.static(path.resolve('../dist/spa')));
+app.use(express.static(path.resolve("../dist/spa")));
 
 https.listen(port, () => {
   console.log(`Server running at https://localhost:${port}/`);
@@ -69,7 +69,6 @@ io.on("connection", async (socket) => {
   socket.on("sendMessage", async (msg) => {
     //紀錄聊天訊息
     msg.senderID = socket.handshake.auth.userID;
-    console.dir(msg);
     DB.setChatRecord(new ObjectId(socket.handshake.auth.RoomID), msg);
     io.to(socket.handshake.auth.RoomID).emit("sendMessage", msg);
     // gpt
@@ -89,7 +88,6 @@ io.on("connection", async (socket) => {
         sender: "GPT",
         content: response.choices[0].message.content,
       };
-      console.dir(msg.content);
       DB.setChatRecord(new ObjectId(socket.handshake.auth.RoomID), msg);
       io.to(socket.handshake.auth.RoomID).emit("sendMessage", msg);
     }
@@ -97,7 +95,11 @@ io.on("connection", async (socket) => {
 
   // 繪圖用
   socket.on("drawing", (data) => {
-    socket.broadcast.emit("drawing", data);
-    console.log(data);
+    socket.broadcast.emit("drawing", data.drawing_event);
+    DB.pushDrawingEvent(data.WhiteboardID, data.canvasID, data.drawing_event);
+  });
+
+  socket.on("canvas", (data) => {
+    socket.broadcast.emit("canvas", data);
   });
 });

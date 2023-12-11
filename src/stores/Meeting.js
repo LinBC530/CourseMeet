@@ -8,7 +8,9 @@ export const useMeetingData = defineStore("useMeetingData", {
     studens: [],
     RoomID: null,
   }),
-  persist: false,
+  persist: {
+    storage: sessionStorage, paths: ['RoomID']
+  },
   getters: {},
   actions: {
     setMeetingData(teacher, studens) {

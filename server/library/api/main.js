@@ -11,3 +11,4 @@ module.exports = {
 require('./account')
 require('./file')
 require('./meet')
+require('./Whiteboard')

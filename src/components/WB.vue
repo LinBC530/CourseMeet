@@ -1,19 +1,25 @@
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import io from "socket.io-client";
-// 引入 drawing pinia
+import { ref, reactive, onMounted, onUpdated } from "vue";
+import { useQuasar } from "quasar";
 import { useDrawData } from "src/stores/drawing"
-// 引入pinia解構方法
+import { useMeetingData } from "src/stores/Meeting";
 import { storeToRefs } from "pinia";
+import { api } from "../boot/axios"
 
-const socket = io("https://localhost:3000", { transports: ['websocket'] });
-// 使用 drawing pinia
+const $q = useQuasar();
 const Draw = useDrawData();
-// 解構draw canvas，解構後為ref物件，使用時須加上.value (ex: canvas.value)，不解構則加上Draw (Draw.canvas)
-const { canvas } = storeToRefs(Draw)
-
+const Meet = useMeetingData();
+const socket = Meet.socket;
+socket.connect();
+const {
+  canvas,
+  canvas_total,
+  cnavas_page_number,
+  canvas_page_name,
+  drawing_event,
+  all_canvasID
+} = storeToRefs(Draw)
 let context = null;
-// 是否正在繪圖
 let isDrawing = false;
 // 工具狀態
 const tool = reactive({
@@ -25,59 +31,229 @@ const tool = reactive({
   color: 'black'
 });
 const current = reactive({ x: 0, y: 0, });
+// if(Meet.RoomID){
+//   socket.connect
+// }
 
 // 接收繪圖資料
 socket.on("drawing", (data) => drawing(data));
+socket.on("canvas", (data) => canvas_settings(data));
+
+// 嘗試取得白板ID及預設畫布ID，如果沒有就建立一個
+if (Meet.RoomID) {
+  try {
+    api.post("/wb/get/whiteboard", { MeetingRoomID: Meet.RoomID }).then((res) => {
+      if (res.data) {
+        if (res.data.type) {
+          Draw.WhiteboardID = res.data.data.WhiteboardID;
+          Draw.canvasID = res.data.data.allCanvasID[0];
+          all_canvasID.value = res.data.data.allCanvasID;
+          canvas_total.value = res.data.data.allCanvasID.length;
+          for (let event of res.data.data.drawing_event)
+            drawing(event)
+        } else throw new Error('data type return false')
+      } else throw new Error('server error')
+    });
+  } catch (e) {
+    console.log(e)
+    $q.notify({
+      message: "發生錯誤，請稍後再試",
+      color: "negative",
+    });
+  }
+}
+else {
+  $q.notify({
+    message: "尚未加入會議，無法共用白板",
+    color: "negative",
+  });
+}
+
+// 設定畫布
+function canvas_settings(data) {
+  switch (data.type) {
+    case 'add':
+      canvas_total.value++;
+      Draw.all_canvasID.push(data.canvasID)
+      break;
+    default:
+      return;
+  }
+}
+
+// 變更畫布分頁
+async function change_canvas_page(type) {
+  switch (type) {
+    case 'next':
+      if (cnavas_page_number.value == 15) break;
+      // 如果目前頁數為最後一頁
+      if (cnavas_page_number.value == canvas_total.value) {
+        // 在DB新增畫布資料，並取得畫布ID
+        try {
+          canvas_total.value++;
+          if (!Draw.WhiteboardID) throw Error("error");
+          await api.post("/wb/new/canvas", { WhiteboardID: Draw.WhiteboardID }).then((res) => {
+            if (res.data) {
+              if (res.data.type) {
+                Draw.canvasID = res.data.data.canvasID;
+                all_canvasID.value.push(res.data.data.canvasID);
+              } else {
+                $q.notify({
+                  message: res.data.reason,
+                  color: "negative",
+                });
+              }
+            } else throw Error('error')
+          });
+          // 通知其他用戶端更新畫布總數，以及新增新畫布
+          socket.emit('canvas', { type: 'add', canvasID: Draw.canvasID })
+        } catch {
+          $q.notify({
+            message: "發生錯誤，請稍後再試4",
+            color: "negative",
+          });
+        }
+        canvas_page_name.value = 'canvas' + cnavas_page_number.value.toString();
+      }
+      else {
+        cnavas_page_number.value++;
+        canvas_page_name.value = 'canvas' + cnavas_page_number.value.toString();
+        try {
+          if (!Draw.WhiteboardID && !Draw.canvasID) throw Error("error");
+          await api.post("/wb/get/canvas", {
+            WhiteboardID: Draw.WhiteboardID,
+            // canvasID: Draw.canvasID
+            canvasID: all_canvasID.value[cnavas_page_number.value - 1]
+          }).then((res) => {
+            if (res.data) {
+              if (res.data.type) {
+                Draw.canvasID = all_canvasID.value[cnavas_page_number.value - 1];
+                for (let event of res.data.data.canvas.drawing_event)
+                  drawing(event)
+              } else {
+                $q.notify({
+                  message: res.data.reason,
+                  color: "negative",
+                });
+              }
+            } else throw Error('error')
+          });
+        } catch (e) {
+          console.log(e)
+          $q.notify({
+            message: "發生錯誤，請稍後再試",
+            color: "negative",
+          });
+        }
+        break;
+      }
+      cnavas_page_number.value++;
+      break;
+    case 'back':
+      if (cnavas_page_number.value == 1) break;
+      cnavas_page_number.value--;
+      canvas_page_name.value = 'canvas' + cnavas_page_number.value.toString();
+      try {
+        if (!Draw.WhiteboardID && !Draw.canvasID) throw Error("error");
+        await api.post("/wb/get/canvas", {
+          WhiteboardID: Draw.WhiteboardID,
+          canvasID: all_canvasID.value[cnavas_page_number.value - 1]
+        }).then((res) => {
+          if (res.data) {
+            if (res.data.type) {
+              Draw.canvasID = all_canvasID.value[cnavas_page_number.value - 1];
+              for (let event of res.data.data.canvas.drawing_event)
+                drawing(event)
+            } else {
+              $q.notify({
+                message: res.data.reason,
+                color: "negative",
+              });
+            }
+          } else throw Error('error')
+        });
+      } catch {
+        $q.notify({
+          message: "發生錯誤，請稍後再試8",
+          color: "negative",
+        });
+      }
+      break;
+    case 'goto':
+      if (cnavas_page_number.value != canvas_total.value) return;
+      break;
+    default:
+      return;
+  }
+  // Draw.canvasID = all_canvasID.value[cnavas_page_number.value - 1]
+  // canvas_page_name.value = 'canvas' + cnavas_page_number.value.toString();
+}
 
 // 繪製圖形
 function drawing(data) {
-  // 取得目前畫布大小，以根據畫布大小還原圖形
-  const w = canvas.value.width;
-  const h = canvas.value.height;
-  // 判斷要繪製的圖形種類
-  switch (data.type) {
-    // 線條
-    case 'Line':
-      drawLine(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.size, data.color, false)
-      break;
-    // 橡皮擦
-    case 'eraser':
-      eraser(data.x * w, data.y * h, data.size, false);
-      break;
-    // 三角形
-    case 'triangle':
-      drawTriangle(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color, data.size, false);
-      break;
-    // 長方形
-    case 'rectangle':
-      drawRectangle(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color, data.size, false);
-      break;
-    // 圓形
-    case 'circle':
-      drawCircle(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color, data.size, false);
-      break;
-    case 'text':
-      drawText(data.x * w, data.y * h, 'hello world', data.size, 'Comic Sans MS', data.color, false)
-    default:
-      break;
+  const w = canvas.value[0].width;
+  const h = canvas.value[0].height;
+
+  for (let event of data.events) {
+    if (cnavas_page_number.value != all_canvasID.value.indexOf(event.canvas_id) + 1) return;
+    // 判斷要繪製的圖形種類
+    switch (event.type) {
+      // 線條
+      case 'Line':
+        drawLine(event.x0 * w, event.y0 * h, event.x1 * w, event.y1 * h, event.size, event.color, false)
+        break;
+      // 橡皮擦
+      case 'eraser':
+        eraser(event.x * w, event.y * h, event.size, false);
+        break;
+      // 三角形
+      case 'triangle':
+        drawTriangle(event.x0 * w, event.y0 * h, event.x1 * w, event.y1 * h, event.color, event.size, false);
+        break;
+      // 長方形
+      case 'rectangle':
+        drawRectangle(event.x0 * w, event.y0 * h, event.x1 * w, event.y1 * h, event.color, event.size, false);
+        break;
+      // 圓形
+      case 'circle':
+        drawCircle(event.x0 * w, event.y0 * h, event.x1 * w, event.y1 * h, event.color, event.size, false);
+        break;
+      case 'text':
+        drawText(event.x * w, event.y * h, 'hello world', event.size, 'Comic Sans MS', event.color, false)
+      default:
+        break;
+    }
   }
 }
 
 onMounted(() => {
-  // canvas
-  context = canvas.value.getContext("2d");
-  canvas.value.addEventListener("mousedown", onMouseDown, false);
-  canvas.value.addEventListener("mouseup", onMouseUp, false);
-  canvas.value.addEventListener("mouseout", onMouseUp, false);
-  canvas.value.addEventListener("mousemove", throttle(onMouseMove, 10), false);
-  // 設定實際上畫布大小(js)等於視覺上畫布大小(css)
-  canvas.value.width = canvas.value.clientWidth;
-  canvas.value.height = canvas.value.clientHeight;
+  setEventListener();
+  set_canvas_size()
 });
+
+onUpdated(() => {
+  setEventListener()
+  set_canvas_size()
+})
+
+function setEventListener() {
+  // canvas
+  context = canvas.value[0].getContext("2d");
+  canvas.value[0].addEventListener("mousedown", onMouseDown, false);
+  canvas.value[0].addEventListener("mouseup", onMouseUp, false);
+  canvas.value[0].addEventListener("mouseout", onMouseUp, false);
+  canvas.value[0].addEventListener("mousemove", throttle(onMouseMove, 10), false);
+}
+
+function set_canvas_size() {
+  // 設定實際上畫布大小(js)等於視覺上畫布大小(css)
+  canvas.value[0].width = canvas.value[0].clientWidth;
+  canvas.value[0].height = canvas.value[0].clientHeight;
+}
 
 // 下載繪圖
 function donwload_as_png() {
-  canvas.value.toBlob((blob) => {
+  canvas.value[0].toBlob((blob) => {
     const link = document.createElement("a");
     link.innerText = "Download";
     link.href = URL.createObjectURL(blob);
@@ -87,7 +263,7 @@ function donwload_as_png() {
 }
 
 function onMouseDown(e) {
-  // snapshot = context.getImageData(0, 0, canvas.value.width, canvas.value.height);
+  // snapshot = context.getImageData(0, 0, canvas.value[0].width, canvas.value[0].height);
   isDrawing = true;
   current.x = e.offsetX;
   current.y = e.offsetY;
@@ -114,9 +290,17 @@ function onMouseUp(e) {
     case 'circle':
       drawCircle(current.x, current.y, e.offsetX, e.offsetY, tool.color, tool.size, true);
       break;
-    default:
+    case 'text':
       break;
+    default:
+      return;
   }
+  socket.emit("drawing", {
+    WhiteboardID: Draw.WhiteboardID,
+    canvasID: Draw.canvasID,
+    drawing_event: drawing_event.value
+  });
+  Draw.reset_drawing_event()
 }
 
 function onMouseMove(e) {
@@ -170,10 +354,12 @@ function drawLine(x0, y0, x1, y1, size, color, emit) {
   if (!emit) {
     return;
   }
-  let w = canvas.value.width;
-  let h = canvas.value.height;
-  socket.emit("drawing", {
+  const w = canvas.value[0].width;
+  const h = canvas.value[0].height;
+  drawing_event.value.events.push({
     type: 'Line',
+    // canvas_id: all_canvasID.value.indexOf(cnavas_page_number.value),
+    canvas_id: Draw.canvasID,
     x0: x0 / w,
     y0: y0 / h,
     x1: x1 / w,
@@ -181,7 +367,20 @@ function drawLine(x0, y0, x1, y1, size, color, emit) {
     color: color,
     size: tool.size,
     emit: false,
-  });
+  })
+  // let w = canvas.value[0].width;
+  // let h = canvas.value[0].height;
+  // socket.emit("drawing", {
+  //   type: 'Line',
+  //   canvas_id: cnavas_page_number.value,
+  //   x0: x0 / w,
+  //   y0: y0 / h,
+  //   x1: x1 / w,
+  //   y1: y1 / h,
+  //   color: color,
+  //   size: tool.size,
+  //   emit: false,
+  // });
 }
 
 // 橡皮擦
@@ -190,15 +389,26 @@ function eraser(x, y, size, emit) {
   if (!emit) {
     return;
   }
-  let w = canvas.value.width;
-  let h = canvas.value.height;
-  socket.emit("drawing", {
+  const w = canvas.value[0].width;
+  const h = canvas.value[0].height;
+  drawing_event.value.events.push({
     type: 'eraser',
+    canvas_id: Draw.canvasID,
     x: x / w,
     y: y / h,
     size: tool.size,
     emit: false,
-  });
+  })
+  // let w = canvas.value[0].width;
+  // let h = canvas.value[0].height;
+  // socket.emit("drawing", {
+  //   type: 'eraser',
+  //   canvas_id: cnavas_page_number.value,
+  //   x: x / w,
+  //   y: y / h,
+  //   size: tool.size,
+  //   emit: false,
+  // });
 }
 
 // 畫三角形
@@ -214,10 +424,11 @@ function drawTriangle(x0, y0, x1, y1, color, size, emit) {
   if (!emit) {
     return;
   }
-  let w = canvas.value.width;
-  let h = canvas.value.height;
-  socket.emit("drawing", {
+  const w = canvas.value[0].width;
+  const h = canvas.value[0].height;
+  drawing_event.value.events.push({
     type: 'triangle',
+    canvas_id: Draw.canvasID,
     x0: x0 / w,
     y0: y0 / h,
     x1: x1 / w,
@@ -225,7 +436,20 @@ function drawTriangle(x0, y0, x1, y1, color, size, emit) {
     color: color,
     size: tool.size,
     emit: false,
-  });
+  })
+  // let w = canvas.value[0].width;
+  // let h = canvas.value[0].height;
+  // socket.emit("drawing", {
+  //   type: 'triangle',
+  //   canvas_id: cnavas_page_number.value,
+  //   x0: x0 / w,
+  //   y0: y0 / h,
+  //   x1: x1 / w,
+  //   y1: y1 / h,
+  //   color: color,
+  //   size: tool.size,
+  //   emit: false,
+  // });
 };
 
 // 畫長方形
@@ -236,10 +460,11 @@ function drawRectangle(x0, y0, x1, y1, color, size, emit) {
   if (!emit) {
     return;
   }
-  const w = canvas.value.width;
-  const h = canvas.value.height;
-  socket.emit("drawing", {
+  const w = canvas.value[0].width;
+  const h = canvas.value[0].height;
+  drawing_event.value.events.push({
     type: 'rectangle',
+    canvas_id: Draw.canvasID,
     x0: x0 / w,
     y0: y0 / h,
     x1: x1 / w,
@@ -247,7 +472,20 @@ function drawRectangle(x0, y0, x1, y1, color, size, emit) {
     color: color,
     size: tool.size,
     emit: false
-  });
+  })
+  // const w = canvas.value[0].width;
+  // const h = canvas.value[0].height;
+  // socket.emit("drawing", {
+  //   type: 'rectangle',
+  //   canvas_id: cnavas_page_number.value,
+  //   x0: x0 / w,
+  //   y0: y0 / h,
+  //   x1: x1 / w,
+  //   y1: y1 / h,
+  //   color: color,
+  //   size: tool.size,
+  //   emit: false
+  // });
 
 }
 
@@ -262,10 +500,11 @@ function drawCircle(x0, y0, x1, y1, color, size, emit) {
   if (!emit) {
     return;
   }
-  const w = canvas.value.width;
-  const h = canvas.value.height;
-  socket.emit("drawing", {
+  const w = canvas.value[0].width;
+  const h = canvas.value[0].height;
+  drawing_event.value.events.push({
     type: 'circle',
+    canvas_id: Draw.canvasID,
     x0: x0 / w,
     y0: y0 / h,
     x1: x1 / w,
@@ -273,7 +512,20 @@ function drawCircle(x0, y0, x1, y1, color, size, emit) {
     color: color,
     size: tool.size,
     emit: false,
-  });
+  })
+  // const w = canvas.value[0].width;
+  // const h = canvas.value[0].height;
+  // socket.emit("drawing", {
+  //   type: 'circle',
+  //   canvas_id: cnavas_page_number.value,
+  //   x0: x0 / w,
+  //   y0: y0 / h,
+  //   x1: x1 / w,
+  //   y1: y1 / h,
+  //   color: color,
+  //   size: tool.size,
+  //   emit: false,
+  // });
 }
 
 // 畫文字
@@ -285,16 +537,28 @@ function drawText(x, y, text, size, font, color, emit) {
   if (!emit) {
     return;
   }
-  const w = canvas.value.width;
-  const h = canvas.value.height;
-  socket.emit("drawing", {
+  const w = canvas.value[0].width;
+  const h = canvas.value[0].height;
+  drawing_event.value.events.push({
     type: 'text',
+    canvas_id: Draw.canvasID,
     x: x / w,
     y: y / h,
     color: color,
     size: tool.size,
     emit: false,
-  });
+  })
+  // const w = canvas.value[0].width;
+  // const h = canvas.value[0].height;
+  // socket.emit("drawing", {
+  //   type: 'text',
+  //   canvas_id: cnavas_page_number.value,
+  //   x: x / w,
+  //   y: y / h,
+  //   color: color,
+  //   size: tool.size,
+  //   emit: false,
+  // });
 }
 </script>
 
@@ -302,6 +566,21 @@ function drawText(x, y, text, size, font, color, emit) {
   <div id="whiteBoard">
     <div id="left">
       <q-card id="toolBar">
+        <q-card-section class="toolbox">
+          <div class="toolbox title">
+            <span>畫布分頁</span>
+          </div>
+          <div class="toolbox tools">
+            <q-btn-group unelevated>
+              <q-btn icon="arrow_back_ios" @click="change_canvas_page('back')" stack />
+              <q-form @submit="change_canvas_page('goto')">
+                <q-input item-aligned v-model="cnavas_page_number" :suffix="'/ ' + canvas_total.toString()" />
+              </q-form>
+              <q-btn icon="arrow_forward_ios" @click="change_canvas_page('next')" stack />
+            </q-btn-group>
+          </div>
+        </q-card-section>
+
         <q-card-section class="toolbox">
           <div class="toolbox title">
             <span>圖形</span>
@@ -387,7 +666,12 @@ function drawText(x, y, text, size, font, color, emit) {
     </div>
 
     <div id="right">
-      <canvas class="eraser" id="canvas" ref="canvas" />
+      <q-carousel v-model="canvas_page_name" class="carousel" transition-prev="slide-right" transition-next="slide-left"
+        animated control-color="primary">
+        <q-carousel-slide v-for="i in canvas_total" :name="'canvas' + i.toString()" class="carousel slide">
+          <canvas :id="i" class="carousel slide canvas" ref="canvas" />
+        </q-carousel-slide>
+      </q-carousel>
     </div>
   </div>
 </template>
@@ -450,13 +734,25 @@ function drawText(x, y, text, size, font, color, emit) {
 #right {
   height: 100%;
   width: 80%;
+  margin: 0;
   padding: 10px;
 }
 
-#canvas {
+.carousel {
   height: 100%;
   width: 100%;
+  padding: 0;
+  margin: 0;
+  background-color: rgba(255, 255, 255, 0)
+}
+
+.carousel.slide {
+  padding: 6px;
   border-radius: 10px;
+}
+
+.carousel.slide.canvas {
+  padding: 0;
   background-color: rgb(255, 255, 255);
 }
 </style>

@@ -2,6 +2,7 @@ const user = require("./user.js");
 const meetingRoom = require("./meetingRoom.js");
 const chatRoom = require("./chatRoom.js");
 const file = require("./file.js");
+const whiteboard = require("./Whiteboard.js")
 
 module.exports = {
   //user
@@ -22,4 +23,10 @@ module.exports = {
   //file
   setFile: file.setFile,
   getFile: file.getFile,
+
+  //whiteBoard
+  creatCanvas: whiteboard.creatCanvas,
+  try_get_Whiteboard: whiteboard.try_get_Whiteboard,
+  pushDrawingEvent: whiteboard.pushDrawingEvent,
+  getCanvas: whiteboard.getCanvas
 };

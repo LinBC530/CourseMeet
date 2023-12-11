@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted, onUpdated } from "vue";
+import { reactive, onMounted, onUpdated } from "vue";
 import { useQuasar } from "quasar";
 import { useDrawData } from "src/stores/drawing"
 import { useMeetingData } from "src/stores/Meeting";
@@ -31,9 +31,6 @@ const tool = reactive({
   color: 'black'
 });
 const current = reactive({ x: 0, y: 0, });
-// if(Meet.RoomID){
-//   socket.connect
-// }
 
 // 接收繪圖資料
 socket.on("drawing", (data) => drawing(data));
@@ -109,7 +106,7 @@ async function change_canvas_page(type) {
           socket.emit('canvas', { type: 'add', canvasID: Draw.canvasID })
         } catch {
           $q.notify({
-            message: "發生錯誤，請稍後再試4",
+            message: "發生錯誤，請稍後再試",
             color: "negative",
           });
         }
@@ -122,7 +119,6 @@ async function change_canvas_page(type) {
           if (!Draw.WhiteboardID && !Draw.canvasID) throw Error("error");
           await api.post("/wb/get/canvas", {
             WhiteboardID: Draw.WhiteboardID,
-            // canvasID: Draw.canvasID
             canvasID: all_canvasID.value[cnavas_page_number.value - 1]
           }).then((res) => {
             if (res.data) {
@@ -174,7 +170,7 @@ async function change_canvas_page(type) {
         });
       } catch {
         $q.notify({
-          message: "發生錯誤，請稍後再試8",
+          message: "發生錯誤，請稍後再試",
           color: "negative",
         });
       }
@@ -219,7 +215,7 @@ function drawing(data) {
         drawCircle(event.x0 * w, event.y0 * h, event.x1 * w, event.y1 * h, event.color, event.size, false);
         break;
       case 'text':
-        drawText(event.x * w, event.y * h, 'hello world', event.size, 'Comic Sans MS', event.color, false)
+        drawText(event.x * w, event.y * h, event.text, event.size, event.font, event.color, false)
       default:
         break;
     }
@@ -239,6 +235,7 @@ onUpdated(() => {
 function setEventListener() {
   // canvas
   context = canvas.value[0].getContext("2d");
+  console.log(context)
   canvas.value[0].addEventListener("mousedown", onMouseDown, false);
   canvas.value[0].addEventListener("mouseup", onMouseUp, false);
   canvas.value[0].addEventListener("mouseout", onMouseUp, false);
@@ -246,9 +243,13 @@ function setEventListener() {
 }
 
 function set_canvas_size() {
+  // 當視窗大小調整時重新設定畫布大小
+  let snapshot = null;
+  if (context) snapshot = context.getImageData(0, 0, canvas.value[0].width, canvas.value[0].height);
   // 設定實際上畫布大小(js)等於視覺上畫布大小(css)
   canvas.value[0].width = canvas.value[0].clientWidth;
   canvas.value[0].height = canvas.value[0].clientHeight;
+  if (context) context.putImageData(snapshot, 0, 0);
 }
 
 // 下載繪圖
@@ -268,7 +269,8 @@ function onMouseDown(e) {
   current.x = e.offsetX;
   current.y = e.offsetY;
   if (tool.type == "eraser") eraser(e.offsetX, e.offsetY, tool.size, true);
-  else if (tool.type == 'text') drawText(e.offsetX, e.offsetY, 'hello world', tool.size, 'Comic Sans MS', tool.color, true);
+  // else if (tool.type == 'text') drawText(e.offsetX, e.offsetY, 'hello world', tool.size, 'Comic Sans MS', tool.color, true);
+  else if (tool.type == 'text') drawText_textarea(e);
 }
 
 function onMouseUp(e) {
@@ -290,8 +292,8 @@ function onMouseUp(e) {
     case 'circle':
       drawCircle(current.x, current.y, e.offsetX, e.offsetY, tool.color, tool.size, true);
       break;
-    case 'text':
-      break;
+    // case 'text':
+    //   break;
     default:
       return;
   }
@@ -368,19 +370,6 @@ function drawLine(x0, y0, x1, y1, size, color, emit) {
     size: tool.size,
     emit: false,
   })
-  // let w = canvas.value[0].width;
-  // let h = canvas.value[0].height;
-  // socket.emit("drawing", {
-  //   type: 'Line',
-  //   canvas_id: cnavas_page_number.value,
-  //   x0: x0 / w,
-  //   y0: y0 / h,
-  //   x1: x1 / w,
-  //   y1: y1 / h,
-  //   color: color,
-  //   size: tool.size,
-  //   emit: false,
-  // });
 }
 
 // 橡皮擦
@@ -399,16 +388,6 @@ function eraser(x, y, size, emit) {
     size: tool.size,
     emit: false,
   })
-  // let w = canvas.value[0].width;
-  // let h = canvas.value[0].height;
-  // socket.emit("drawing", {
-  //   type: 'eraser',
-  //   canvas_id: cnavas_page_number.value,
-  //   x: x / w,
-  //   y: y / h,
-  //   size: tool.size,
-  //   emit: false,
-  // });
 }
 
 // 畫三角形
@@ -437,19 +416,6 @@ function drawTriangle(x0, y0, x1, y1, color, size, emit) {
     size: tool.size,
     emit: false,
   })
-  // let w = canvas.value[0].width;
-  // let h = canvas.value[0].height;
-  // socket.emit("drawing", {
-  //   type: 'triangle',
-  //   canvas_id: cnavas_page_number.value,
-  //   x0: x0 / w,
-  //   y0: y0 / h,
-  //   x1: x1 / w,
-  //   y1: y1 / h,
-  //   color: color,
-  //   size: tool.size,
-  //   emit: false,
-  // });
 };
 
 // 畫長方形
@@ -473,20 +439,6 @@ function drawRectangle(x0, y0, x1, y1, color, size, emit) {
     size: tool.size,
     emit: false
   })
-  // const w = canvas.value[0].width;
-  // const h = canvas.value[0].height;
-  // socket.emit("drawing", {
-  //   type: 'rectangle',
-  //   canvas_id: cnavas_page_number.value,
-  //   x0: x0 / w,
-  //   y0: y0 / h,
-  //   x1: x1 / w,
-  //   y1: y1 / h,
-  //   color: color,
-  //   size: tool.size,
-  //   emit: false
-  // });
-
 }
 
 // 畫圓形
@@ -513,19 +465,44 @@ function drawCircle(x0, y0, x1, y1, color, size, emit) {
     size: tool.size,
     emit: false,
   })
-  // const w = canvas.value[0].width;
-  // const h = canvas.value[0].height;
-  // socket.emit("drawing", {
-  //   type: 'circle',
-  //   canvas_id: cnavas_page_number.value,
-  //   x0: x0 / w,
-  //   y0: y0 / h,
-  //   x1: x1 / w,
-  //   y1: y1 / h,
-  //   color: color,
-  //   size: tool.size,
-  //   emit: false,
-  // });
+}
+
+// 產生textarea供輸入文字，並繪製文字
+function drawText_textarea(event) {
+  // 停止點擊事件傳遞，以防focus事件失效
+  event.preventDefault();
+  tool.type = '';
+  const input = document.createElement('input');
+
+  input.rows = 1;
+  input.style.position = 'absolute';
+  input.style.left = event.clientX.toString() + 'px';
+  input.style.top = (event.clientY - tool.size * 10).toString() + 'px';
+  input.style.font = tool.size * 10 + 'px Comic Sans MS';
+  input.style.color = tool.color;
+  input.style.margin = '0'
+  input.style.padding = '0'
+  input.style.width = 'auto';
+  input.style.height = 'auto';
+  input.style.resize = 'none';
+  input.style.whiteSpace = 'nowrap'
+  input.style.overflow = 'hidden';
+
+  // 當輸入框失去焦點石繪製文字
+  input.addEventListener('blur', function () {
+    console.log('blur')
+    if (input.value.length) drawText(event.offsetX, event.offsetY, input.value, tool.size, 'Comic Sans MS', tool.color, true)
+    document.body.removeChild(input);
+    tool.type = 'text'
+    socket.emit("drawing", {
+      WhiteboardID: Draw.WhiteboardID,
+      canvasID: Draw.canvasID,
+      drawing_event: drawing_event.value
+    });
+    Draw.reset_drawing_event()
+  });
+  document.body.appendChild(input);
+  input.focus();
 }
 
 // 畫文字
@@ -542,23 +519,14 @@ function drawText(x, y, text, size, font, color, emit) {
   drawing_event.value.events.push({
     type: 'text',
     canvas_id: Draw.canvasID,
+    text: text,
+    font: font,
     x: x / w,
     y: y / h,
     color: color,
     size: tool.size,
     emit: false,
   })
-  // const w = canvas.value[0].width;
-  // const h = canvas.value[0].height;
-  // socket.emit("drawing", {
-  //   type: 'text',
-  //   canvas_id: cnavas_page_number.value,
-  //   x: x / w,
-  //   y: y / h,
-  //   color: color,
-  //   size: tool.size,
-  //   emit: false,
-  // });
 }
 </script>
 
@@ -672,6 +640,7 @@ function drawText(x, y, text, size, font, color, emit) {
           <canvas :id="i" class="carousel slide canvas" ref="canvas" />
         </q-carousel-slide>
       </q-carousel>
+      <q-resize-observer @resize="set_canvas_size" />
     </div>
   </div>
 </template>

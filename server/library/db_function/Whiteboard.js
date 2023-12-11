@@ -89,39 +89,38 @@ async function creatCanvas(WB_ID) {
   }
 }
 
-// need fix
-async function removeCanvas(WB_ID, canvas_ID) {
-  //傳回之資料格式
-  const data_out = new Data();
-  try {
-    const database = client.db("Meet");
-    const WB = database.collection("Whiteboard");
-    // 傳入之部分資料打包
-    const data_in = {
-      _id: new ObjectId(),
-      WhiteboardID: WB_ID,
-      drawing_event: [],
-    };
-    const result = await WB.updateOne(
-      { _id: new ObjectId(WB_ID) },
-      { $push: { canvas: data_in } }
-    );
-    //收到DB資料
-    if (result.matchedCount) {
-      data_out.success({ canvasID: data_in._id.toString() });
-      return data_out;
-    }
-    //DB發生錯誤
-    else {
-      data_out.fail("發生錯誤，請稍後再試");
-      return data_out;
-    }
-  } catch {
-    //此方法發生錯誤
-    data_out.fail("發生錯誤，請稍後再試");
-    return data_out;
-  }
-}
+// async function removeCanvas(WB_ID, canvas_ID) {
+//   //傳回之資料格式
+//   const data_out = new Data();
+//   try {
+//     const database = client.db("Meet");
+//     const WB = database.collection("Whiteboard");
+//     // 傳入之部分資料打包
+//     const data_in = {
+//       _id: new ObjectId(),
+//       WhiteboardID: WB_ID,
+//       drawing_event: [],
+//     };
+//     const result = await WB.updateOne(
+//       { _id: new ObjectId(WB_ID) },
+//       { $push: { canvas: data_in } }
+//     );
+//     //收到DB資料
+//     if (result.matchedCount) {
+//       data_out.success({ canvasID: data_in._id.toString() });
+//       return data_out;
+//     }
+//     //DB發生錯誤
+//     else {
+//       data_out.fail("發生錯誤，請稍後再試");
+//       return data_out;
+//     }
+//   } catch {
+//     //此方法發生錯誤
+//     data_out.fail("發生錯誤，請稍後再試");
+//     return data_out;
+//   }
+// }
 
 // 取得指定畫布資料
 async function getCanvas(WB_ID, canvas_ID) {

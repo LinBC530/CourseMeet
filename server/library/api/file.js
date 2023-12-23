@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+// const ObjectId = require("mongodb").ObjectId;
 const DB = require('../db_function/main')
 const { app } = require('./main')
 
@@ -33,5 +34,6 @@ app.post("/sendFile", upload.single("file"), async (req, res) => {
 app.post("/getFile", express.json(), async (req, res) => {
   console.dir(req.method);
   JSON.stringify(req.body);
-  res.download(await (await DB.getFile(new ObjectId(req.body.fileID))).data);
+  // res.download(await (await DB.getFile(new ObjectId(req.body.fileID))).data);
+  res.download(await (await DB.getFile(req.body.fileID)).data);
 });

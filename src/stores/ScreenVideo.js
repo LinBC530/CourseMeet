@@ -107,30 +107,32 @@ export const useScreenVideo = defineStore("counter", {
         });
         // this.displayMedia.mute()
         this.pub_video.srcObject = this.displayMedia;
-        this.pub_video.srcObject.mute();
+        // this.pub_video.srcObject.mute();
         this.client.publish(this.displayMedia);
         this.displayMedia.getTracks().forEach((track) => {
           // 停止分享被點擊時停止分享畫面
+          if(track.kind == 'video')
           track.onended = () => {
-            console.dir("stop2");
-            // if (this.isREC) this.mediaRecorder.stop();
             console.dir("ended");
             this.pub_video.srcObject = null;
             track.stop();
-            this.displayMedia.removeTrack(track);
+            // this.displayMedia.removeTrack(track);
             this.displayMedia.unpublish();
             this.displayMedia = null;
             this.isPub = false;
+            console.dir(track);
           };
+          else
+          track.onended = () => track.stop();
         });
       } else if (this.isPub) {
         console.dir("stop3");
-        // if (this.isREC) this.mediaRecorder.stop();
         this.pub_video.srcObject = null;
-        this.displayMedia.unpublish();
+        // this.displayMedia.unpublish();
         this.displayMedia.getTracks().forEach((track) => {
           track.stop();
         });
+        this.displayMedia.unpublish();
         this.displayMedia = null;
         this.isPub = false;
       }
@@ -138,10 +140,10 @@ export const useScreenVideo = defineStore("counter", {
     joinRoom() {
       this.client.join(Meeting.RoomID);
       // 請求麥克風權限
-      LocalStream.getUserMedia({
-        video: false,
-        audio: true,
-      })
+      // LocalStream.getUserMedia({
+      //   video: false,
+      //   audio: true,
+      // })
     },
   },
 });

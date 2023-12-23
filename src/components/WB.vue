@@ -46,8 +46,9 @@ if (Meet.RoomID) {
           Draw.canvasID = res.data.data.allCanvasID[0];
           all_canvasID.value = res.data.data.allCanvasID;
           canvas_total.value = res.data.data.allCanvasID.length;
-          for (let event of res.data.data.drawing_event)
-            drawing(event)
+          if (res.data.data.drawing_event)
+            for (let event of res.data.data.drawing_event)
+              drawing(event)
         } else throw new Error('data type return false')
       } else throw new Error('server error')
     });
@@ -110,6 +111,7 @@ async function change_canvas_page(type) {
             color: "negative",
           });
         }
+        cnavas_page_number.value++
         canvas_page_name.value = 'canvas' + cnavas_page_number.value.toString();
       }
       else {
@@ -143,7 +145,7 @@ async function change_canvas_page(type) {
         }
         break;
       }
-      cnavas_page_number.value++;
+      // cnavas_page_number.value++;
       break;
     case 'back':
       if (cnavas_page_number.value == 1) break;
@@ -482,12 +484,20 @@ function drawText_textarea(event) {
   input.style.color = tool.color;
   input.style.margin = '0'
   input.style.padding = '0'
-  input.style.width = 'auto';
+  input.style.width = '150px'
   input.style.height = 'auto';
+  input.style.minWidth = '150px';
   input.style.resize = 'none';
   input.style.whiteSpace = 'nowrap'
   input.style.overflow = 'hidden';
+  input.style.backgroundColor = 'transparent'
 
+  input.addEventListener('input', () => {
+    console.log(context.measureText(input.value).width)
+    // input.style.width = (input.value.length * tool.size * 10).toString()+'px'
+    context.font = (tool.size * 10).toString() + 'px Comic Sans MS'
+    input.style.width = (context.measureText(input.value).width).toString() + 'px'
+  })
   // 當輸入框失去焦點石繪製文字
   input.addEventListener('blur', function () {
     console.log('blur')

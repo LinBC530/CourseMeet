@@ -107,7 +107,7 @@ function RoomID_OnClick() {
           color="black"
         ></q-icon>
       </button> -->
-      <button v-show="store.isPub" class="btn" id="Mic" @click="MicButtonOnClick">
+      <button v-show="store.isPub && store.userMedia" class="btn" id="Mic" @click="MicButtonOnClick">
         <q-icon class="material-symbols-outlined" :name="store.isOpenMic ? 'mic' : 'mic_off'"
           :color="store.isOpenMic ? 'grey-10' : 'red'" size="36px" color="black"></q-icon>
         <q-tooltip v-if="store.isOpenMic" style="font-size: 12px;">關閉麥克風</q-tooltip>

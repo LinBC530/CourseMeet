@@ -2,7 +2,8 @@ const { ObjectId } = require("mongodb");
 const { client, Data } = require("./mongo.js");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
-require("dotenv").config({ path: "library/db_function/mail.env" });
+// require("dotenv").config({ path: "library/db_function/mail.env" });
+require("dotenv").config({ path: "../../server.env" });
 
 module.exports = {
   newVerificationCode,

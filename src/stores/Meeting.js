@@ -3,7 +3,8 @@ import { io } from "socket.io-client";
 
 export const useMeetingData = defineStore("useMeetingData", {
   state: () => ({
-    socket: io("https://localhost:3000", { transports: ["websocket"], autoConnect: false }),
+    // socket: io("https://localhost:3000", { transports: ["websocket"], autoConnect: false }),
+    socket: io(process.env.server_url, { transports: ["websocket"], autoConnect: false }),
     teacher: "null",
     studens: [],
     RoomID: null,

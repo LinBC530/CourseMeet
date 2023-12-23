@@ -1,4 +1,5 @@
 const { client, Data } = require("./mongo.js")
+const { ObjectId } = require("mongodb");
 
 module.exports = {
   setFile,
@@ -42,13 +43,14 @@ async function getFile(fileID) {
   try {
     const database = client.db("Meet");
     const Users = database.collection("Files");
-    const result = await Users.findOne({ _id: fileID });
+    const result = await Users.findOne({ _id: new ObjectId(fileID) });
     //收到DB資料
     if (result) {
       data_out.success(result.path);
       return data_out;
     }
     //DB發生錯誤
+    
     else {
       data_out.fail("發生錯誤，請稍後再試");
       return data_out;

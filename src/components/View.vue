@@ -16,7 +16,8 @@ const pub_video = ref();
 // });
 
 // 連接至ion-sfu服務
-const signal = new IonSFUJSONRPCSignal("wss://localhost:7000/ws");
+// const signal = new IonSFUJSONRPCSignal("wss://localhost:7000/ws");
+const signal = new IonSFUJSONRPCSignal(process.env.ion_sfu_url);
 const client = new Client(signal);
 
 // 連接ion-sfu伺服端成功後將client加入會議
@@ -54,9 +55,27 @@ onMounted(() => {
           // stream.getTracks().forEach(track => {console.dir(track);track.stop();stream.removeTrack(track);})
           console.dir(stream.getTracks());
           store.sub_video.srcObject = null;
-          // console.dir("removetrack")
+          console.dir("removetrack")
         };
-      }
+        // function t() {
+        //   console.dir(stream.getTracks());
+        //   store.sub_video.srcObject = null;
+        //   console.dir("removetrack")
+        // }
+
+        // track.addEventListener('ended', t, false)
+        // track.onended = () => {
+        //   // stream.getTracks().forEach(track => {console.dir(track);track.stop();stream.removeTrack(track);})
+        //   console.dir(stream.getTracks());
+        //   store.sub_video.srcObject = null;
+        //   console.dir("removetrack")
+        // }
+      //}
+      // stream.onremovetrack = () => {
+      //   console.dir(stream.getTracks());
+      //   store.sub_video.srcObject = null;
+      //   console.dir("removetrack")
+      };
 
       console.dir('client')
       console.dir(stream.getTracks());
@@ -73,7 +92,7 @@ onMounted(() => {
   <div id="View_main">
     <div id="View">
       <!-- <div id="left"> -->
-      <video class="displayMider" ref="pub_video" autoplay controls v-show="store.isPub"></video>
+      <video class="displayMider" ref="pub_video" autoplay controls v-show="store.isPub" muted></video>
       <video class="displayMider" ref="sub_video" autoplay controls v-show="!store.isPub"></video>
       <!-- </div>
       <div id="right">

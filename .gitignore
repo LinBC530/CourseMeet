@@ -27,4 +27,4 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
-server/library/db_function/mail.env
+server/server.env

@@ -176,7 +176,7 @@ function sendAccountData() {
     style="background-color: rgb(255, 255, 255)"
   >
     <div id="title">
-      <span>AI教學平台</span>
+      <span>AI學習平台</span>
     </div>
 
     <!-- 控制項 -->
@@ -244,11 +244,11 @@ function sendAccountData() {
             />
           </div>
         </q-form>
-        <div>
+        <!-- <div>
           <span id="other_login" @click="slide = 'other_login'"
             >使用其他方式登入</span
           >
-        </div>
+        </div> -->
       </q-carousel-slide>
 
       <!-- 註冊 -->
@@ -327,12 +327,12 @@ function sendAccountData() {
       </q-carousel-slide>
 
       <!-- 其他登入方式 -->
-      <q-carousel-slide
+      <!-- <q-carousel-slide
         name="other_login"
         class="column no-wrap flex-center carousel slide"
       >
         <div>開發中</div>
-      </q-carousel-slide>
+      </q-carousel-slide> -->
 
       <!-- 等待伺服器回應 -->
       <q-carousel-slide

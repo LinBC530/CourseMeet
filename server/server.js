@@ -1,14 +1,17 @@
+require("dotenv").config({ path: "./server.env" });
 const OpenAI = require("openai").default;
 const openai = new OpenAI({
-  apiKey: "API_KEY",
+  apiKey: process.env.openai_key,
 });
 const express = require("express");
 const DB = require("./library/db_function/main");
 const { app } = require("./library/api/main");
 const fs = require("fs");
 var options = {
-  key: fs.readFileSync("C:/Users/user/Desktop/SSL/server.key"),
-  cert: fs.readFileSync("C:/Users/user/Desktop/SSL/server.crt"),
+  // key: fs.readFileSync("C:/Users/user/Desktop/SSL/server.key"),
+  // cert: fs.readFileSync("C:/Users/user/Desktop/SSL/server.crt"),
+  key: fs.readFileSync(process.env.ssl_key),
+  cert: fs.readFileSync(process.env.ssl_cert),
 };
 const https = require("https").Server(options, app);
 const io = require("socket.io")(https);

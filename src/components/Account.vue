@@ -67,6 +67,7 @@ function changeAccountData() {
       .then((res) => {
         if (res.data) {
           if (res.data.type) {
+            store.userName = user.Name;
             $q.notify({
               message: "更新成功",
               color: "negative",

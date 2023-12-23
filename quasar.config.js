@@ -62,7 +62,7 @@ module.exports = configure(function (/* ctx */) {
 
       // publicPath: '/',
       // analyze: true,
-      // env: {},
+      env: { server_url:'https://localhost:3000', ion_sfu_url:'wss://localhost:7000/ws' },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,

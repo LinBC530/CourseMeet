@@ -1,5 +1,7 @@
 const MongoClient = require("mongodb").MongoClient;
-const uri = "mongodb://127.0.0.1:27017/";
+require("dotenv").config({ path: "../../server.env" });
+// const uri = "mongodb://127.0.0.1:27017/";
+const uri = process.env.mongodb_url
 const client = new MongoClient(uri);
 
 class Data {

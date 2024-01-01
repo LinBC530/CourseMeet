@@ -2,7 +2,7 @@
   "name": "final-project",
   "version": "0.0.1",
   "description": "A Quasar Project",
-  "productName": "AI學習平台",
+  "productName": "輔助教學平台",
   "author": "LinBC",
   "private": true,
   "scripts": {

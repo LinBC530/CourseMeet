@@ -176,7 +176,7 @@ function sendAccountData() {
     style="background-color: rgb(255, 255, 255)"
   >
     <div id="title">
-      <span>AI學習平台</span>
+      <span>輔助教學平台</span>
     </div>
 
     <!-- 控制項 -->

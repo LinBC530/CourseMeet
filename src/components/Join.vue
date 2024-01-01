@@ -120,7 +120,7 @@ function signOut() {
         </q-menu>
       </div>
       <div id="title">
-        <span>AI學習平台</span>
+        <span>輔助教學平台</span>
       </div>
       <div id="nav">
         <span

@@ -1,11 +1,10 @@
 <script setup>
 import { ref, reactive } from "vue";
-import Talk from "./Talk.vue";
 import Member from "./Member.vue";
 import MeetingMinutes from "./MeetingMinutes.vue";
 import FileList from "./fileList.vue";
 import AI_teaching_assistant from "./AI_teaching_assistant.vue";
-import { event } from "quasar";
+import ChatRoom from "./ChatRoom.vue";
 const navSwitchType = ref(false);
 
 //工具是否啟用(預設狀態)
@@ -49,11 +48,11 @@ function tool_onClick(event, tool_name) {
 <template>
   <div id="body">
     <div id="main" v-show="navSwitchType">
-      <Talk v-show="show.charRoom" />
+      <ChatRoom v-show="show.charRoom" />
       <Member v-show="show.memberList" />
-      <MeetingMinutes v-show="show.meetingMinutes" />
+      <!-- <MeetingMinutes v-show="show.meetingMinutes" /> -->
       <FileList v-show="show.fileList" />
-      <AI_teaching_assistant v-show="show.AI_teaching_assistant" />
+      <!-- <AI_teaching_assistant v-show="show.AI_teaching_assistant" /> -->
     </div>
     <div id="nav" @click="navSwitchType = !navSwitchType">
       <q-btn class="btn" @click="tool_onClick($event, 'memberList')" size="100%" no-caps stack unelevated>
@@ -106,7 +105,7 @@ function tool_onClick(event, tool_name) {
 
 #main {
   height: 90%;
-  width: 300px;
+  width: 350px;
   margin-top: 10%;
   margin-bottom: 10%;
   border-radius: 30pt 0pt 0pt 30pt;

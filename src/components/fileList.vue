@@ -1,12 +1,14 @@
 <script setup>
 import { api } from "../boot/axios";
 import { useMeetingData } from "src/stores/Meeting";
+import { storeToRefs } from "pinia";
 import { ref } from "vue";
 
-const Meeting = useMeetingData();
-const socket = Meeting.socket
+// use Meeting store
+const Meeting_store = useMeetingData();
+const { socket } = storeToRefs(Meeting_store);
 
-const messages = ref([]);
+const files = ref([]);
 
 //判斷訊息型態並處理
 function getDataType_as_file(msg) {
@@ -18,8 +20,16 @@ function getDataType_as_file(msg) {
     return;
   }
   if (msg.dataType == "file") {
-    messages.value.push({
+    files.value.unshift({
       dataType: "file",
+      userName: msg.sender,
+      fileName: msg.fileName,
+      message: msg.content,
+    });
+  }
+  else if (msg.dataType == "img") {
+    files.value.unshift({
+      dataType: "img",
       userName: msg.sender,
       fileName: msg.fileName,
       message: msg.content,
@@ -28,29 +38,35 @@ function getDataType_as_file(msg) {
 }
 
 //將收到的訊息新增至messages，以顯示於聊天室
-socket.on("sendMessage", (msg) => getDataType_as_file(msg));
+socket.value.on("sendMessage", (msg) => getDataType_as_file(msg));
 
 //將收到的訊息新增至messages，以顯示於聊天室
-socket.on("allMessage", (msgs) => getDataType_as_file(msgs));
+socket.value.on("allMessage", (msgs) => getDataType_as_file(msgs));
 
 //下載檔案
-function getFile(fileID, fileName) {
-  //對server發出請求，等待srver傳回對應檔案ID(fileID)之檔案，並指定傳回格式為blob
-  api
-    .post("/getFile", { fileID: fileID }, { responseType: "blob" })
-    .then((res) => {
-      //產生一個超連結，並設置下載屬性，且指定下載之連結位置為傳回之檔案的參考位置，後執行下載
-      const Link = document.createElement("a");
-      Link.download = fileName;
-      Link.style.display = "none";
-      Link.href = URL.createObjectURL(res.data);
-      Link.click();
-      URL.revokeObjectURL(Link.href);
-    })
-    .catch((e) => {
-      console.log(e);
-    });
+function getFile(filetype, fileID_or_blob, fileName) {
+  const Link = document.createElement("a");
+  Link.download = fileName;
+  Link.style.display = "none";
+  if (filetype == 'img') {
+    Link.href = fileID_or_blob
+    Link.click();
+    URL.revokeObjectURL(Link.href);
+  }
+  else
+    api
+      .post("/getFile", { fileID: fileID_or_blob }, { responseType: "blob" })
+      .then((res) => {
+        Link.href = URL.createObjectURL(res.data);
+        Link.click();
+        URL.revokeObjectURL(Link.href);
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+
 }
+
 </script>
 
 <template>
@@ -60,8 +76,16 @@ function getFile(fileID, fileName) {
     <div id="content">
       <q-scroll-area id="scroll">
         <q-list>
-          <q-item class="items" clickable v-for="file of messages">
-            <q-item-section @click="getFile(file.message, file.fileName)">
+          <q-item class="items" clickable v-for="file of files">
+            <q-item-section class="section" v-if="file.dataType == 'file'"
+              @click="getFile(file.dataType, file.message, file.fileName)">
+              <div class="file">
+                <q-icon name="description" size="36px" color="blue" />
+                <span>{{ file.fileName }}</span>
+              </div>
+            </q-item-section>
+            <q-item-section class="section" v-else @click="getFile(file.dataType, file.message, file.fileName)">
+              <img class="img" :src="file.message" />
               {{ file.fileName }}
             </q-item-section>
           </q-item>
@@ -102,5 +126,15 @@ function getFile(fileID, fileName) {
 .items {
   font-weight: normal;
   text-align: left;
+}
+
+.file {
+  display: flex;
+  justify-content: content;
+  font-size: 24px;
+}
+
+.img {
+  width: 100%;
 }
 </style>

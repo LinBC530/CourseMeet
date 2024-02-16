@@ -8,13 +8,11 @@ const DB = require("./library/db_function/main");
 const { app } = require("./library/api/main");
 const fs = require("fs");
 var options = {
-  // key: fs.readFileSync("C:/Users/user/Desktop/SSL/server.key"),
-  // cert: fs.readFileSync("C:/Users/user/Desktop/SSL/server.crt"),
   key: fs.readFileSync(process.env.ssl_key),
   cert: fs.readFileSync(process.env.ssl_cert),
 };
 const https = require("https").Server(options, app);
-const io = require("socket.io")(https);
+const io = require("socket.io")(https, {maxHttpBufferSize: 1e8});
 const path = require("path");
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 3000;
@@ -75,7 +73,7 @@ io.on("connection", async (socket) => {
     DB.setChatRecord(new ObjectId(socket.handshake.auth.RoomID), msg);
     io.to(socket.handshake.auth.RoomID).emit("sendMessage", msg);
     // gpt
-    if (msg.recipient == "GPT") {
+    if (msg.recipient == "GPT" || msg.recipient == "gpt") {
       const response = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [

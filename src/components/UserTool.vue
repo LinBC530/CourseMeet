@@ -103,7 +103,6 @@ function tool_onClick(event, tool_name) {
 #nav {
   height: 100%;
   width: 60px;
-  border-radius: 30pt;
   background-color: rgb(200, 200, 200);
   user-select: none;
   padding: 20px 0px;
@@ -113,10 +112,9 @@ function tool_onClick(event, tool_name) {
 }
 
 #main {
-  height: 90%;
+  height: 100%;
   width: 350px;
-  margin-top: 10%;
-  margin-bottom: 10%;
+  margin-left: 5px;
   border-radius: 30pt 0pt 0pt 30pt;
   background-color: white;
   padding: 5%;

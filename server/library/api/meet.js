@@ -13,7 +13,8 @@ app.post("/CreatMeetingRoom", express.json(), async (req, res) => {
 app.post("/checkMeeting", express.json(), async (req, res) => {
   console.dir(req.method);
   JSON.stringify(req.body);
-  if ((await DB.getMeetingRoomData(new ObjectId(req.body.RoomID))).type)
+  // if ((await DB.getMeetingRoomData(new ObjectId(req.body.RoomID))).type)
+  if ((await DB.getMeetingRoomData(req.body.RoomID)).type)
     res.send({ type: true, reason: "" });
   else res.send({ type: false, reason: "查無此會議" });
 });

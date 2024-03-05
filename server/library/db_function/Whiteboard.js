@@ -14,7 +14,8 @@ async function try_get_Whiteboard(MeetingRoomID) {
     const database = client.db("Meet");
     const WB = database.collection("Whiteboard");
     const Whiteboard = await WB.aggregate([
-      { $match: { MeetingRoomID: new ObjectId(MeetingRoomID) } },
+      // { $match: { MeetingRoomID: new ObjectId(MeetingRoomID) } },
+      { $match: { MeetingRoomID: MeetingRoomID } },
       { $project: { allCanvasID: "$canvas._id" } },
     ]).toArray();
 
@@ -22,7 +23,8 @@ async function try_get_Whiteboard(MeetingRoomID) {
       // 傳入之部分資料打包
       const data_in = {
         _id: new ObjectId(),
-        MeetingRoomID: new ObjectId(MeetingRoomID),
+        // MeetingRoomID: new ObjectId(MeetingRoomID),
+        MeetingRoomID: MeetingRoomID,
         canvas: [],
       };
       // data_in.canvas.push(await creatCanvas(data_in._id))

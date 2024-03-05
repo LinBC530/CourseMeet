@@ -13,6 +13,7 @@ const show = reactive({
   // meetingMinutes: false,
   charRoom: true,
   fileList: false,
+  gpt: false
 });
 
 function reset_show() {
@@ -20,6 +21,7 @@ function reset_show() {
   // show.meetingMinutes = false;
   show.charRoom = false;
   show.fileList = false;
+  show.gpt = false
 }
 
 // 各工具功能是否顯示
@@ -37,6 +39,9 @@ function tool_onClick(event, tool_name) {
     case "fileList":
       show.fileList ? navSwitchType.value = !navSwitchType.value : (() => { reset_show(); show.fileList = true; })()
       break;
+    case "GPT":
+      show.gpt ? navSwitchType.value = !navSwitchType.value : (() => { reset_show(); show.gpt = true; })()
+      break;
     default:
       break;
   }
@@ -52,7 +57,7 @@ function tool_onClick(event, tool_name) {
       <Member v-show="show.memberList" />
       <!-- <MeetingMinutes v-show="show.meetingMinutes" /> -->
       <FileList v-show="show.fileList" />
-      <!-- <AI_teaching_assistant v-show="show.AI_teaching_assistant" /> -->
+      <AI_teaching_assistant v-show="show.gpt" />
     </div>
     <div id="nav" @click="navSwitchType = !navSwitchType">
       <q-btn class="btn" @click="tool_onClick($event, 'memberList')" size="100%" no-caps stack unelevated>
@@ -70,6 +75,10 @@ function tool_onClick(event, tool_name) {
       <q-btn class="btn" @click="tool_onClick($event, 'fileList')" size="100%" no-caps stack unelevated>
         <q-icon class="btn icon" name="description" size="36px" />
         <label class="btn label">檔案</label>
+      </q-btn>
+      <q-btn class="btn" @click="tool_onClick($event, 'GPT')" size="100%" no-caps stack unelevated>
+        <q-icon class="btn icon" name="img:icons/ChatGPT.svg" size="36px" />
+        <label class="btn label">GPT</label>
       </q-btn>
     </div>
   </div>

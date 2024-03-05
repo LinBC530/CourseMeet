@@ -4,7 +4,7 @@ const { creatChatRoom } = require("./chatRoom.js");
 
 module.exports = {
   creatMeetingRoom,
-  getMeetingRoomData
+  getMeetingRoomData,
 }
 
 //建立會議記錄(建立會議時)
@@ -17,7 +17,8 @@ async function creatMeetingRoom(teacherID) {
     const chatRoomID = await (await creatChatRoom()).data.chatRoomID;
     //傳入之部分資料打包
     const data_in = {
-      _id: new ObjectId(),
+      // _id: new ObjectId(),
+      _id: String(Math.random().toString().slice(3,5) + Date.now().toString(36)).toUpperCase(),
       Teacher: teacherID,
       Stuednts: [],
       ChatRoomID: chatRoomID,

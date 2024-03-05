@@ -16,7 +16,8 @@ const MeetingRoomID = ref("");
 
 //加入會議室
 function joinMeetingRoom() {
-  if (MeetingRoomID.value && MeetingRoomID.value.length == 24) {
+  // if (MeetingRoomID.value && MeetingRoomID.value.length == 24) {
+  if (MeetingRoomID.value && MeetingRoomID.value.length == 10) {
     api
       .post("/checkMeeting", { RoomID: MeetingRoomID.value })
       .then((res) => {
@@ -106,11 +107,7 @@ function signOut() {
         <span>Hi, {{ user.userName }}</span>
         <q-menu style="text-align: center">
           <q-list>
-            <q-item
-              clickable
-              v-ripple
-              @click="router.push({ path: '/Account' })"
-            >
+            <q-item clickable v-ripple @click="router.push({ path: '/Account' })">
               <q-item-section>帳戶設定</q-item-section>
             </q-item>
             <q-item @click="signOut" clickable v-ripple>
@@ -123,44 +120,25 @@ function signOut() {
         <span>輔助教學平台</span>
       </div>
       <div id="nav">
-        <span
-          @click="
-            join = true;
-            MeetingRoomID = '';
-          "
-          >加入討論</span
-        >
+        <span @click="
+          join = true;
+        MeetingRoomID = '';
+        ">加入討論</span>
         /
-        <span
-          @click="
-            join = false;
-            creatMeetingRoom();
-          "
-          >建立討論</span
-        >
+        <span @click="
+          join = false;
+        creatMeetingRoom();
+        ">建立討論</span>
       </div>
       <q-form @submit="joinMeetingRoom">
         <div id="input">
-          <q-input
-            id="Email_box"
-            v-model="MeetingRoomID"
-            label="RoomID"
-            v-if="join"
-          />
+          <q-input id="Email_box" v-model="MeetingRoomID" label="RoomID" v-if="join" />
           <div id="RoomID" v-else>
             <span>會議代碼: {{ MeetingRoomID }}</span>
           </div>
         </div>
         <div id="button">
-          <q-btn
-            id="btn"
-            type="submit"
-            label-color="dark"
-            unelevated
-            rounded
-            color="secondary"
-            label="加入"
-          />
+          <q-btn id="btn" type="submit" label-color="dark" unelevated rounded color="secondary" label="加入" />
         </div>
       </q-form>
     </q-card-section>
@@ -174,17 +152,21 @@ function signOut() {
   min-width: 500pt;
   padding: 10pt;
 }
+
 #nav {
   display: flex;
   justify-content: center;
   font-size: 20pt;
 }
+
 #nav span {
   color: rgb(46, 46, 170);
 }
+
 #nav span:hover {
   cursor: pointer;
 }
+
 #account {
   width: 150px;
   padding: 10px;
@@ -196,6 +178,7 @@ function signOut() {
   cursor: pointer;
   user-select: none;
 }
+
 #account:hover {
   background-color: rgb(234, 234, 234);
 }
@@ -205,33 +188,39 @@ function signOut() {
   display: flex;
   justify-content: center;
 }
+
 #title span {
   display: flex;
   align-items: center;
   font-size: 50pt;
 }
+
 form {
   height: 60%;
   width: 80%;
   margin: 0 auto;
 }
+
 #button {
   width: 100%;
   margin: 10pt;
   display: flex;
   justify-content: center;
 }
+
 #input {
   height: 80;
   width: 80%;
   margin-left: auto;
   margin-right: auto;
 }
-#RoomID{
+
+#RoomID {
   margin: 10px 0px;
   text-align: center;
   font-size: 18px;
 }
+
 #btn {
   height: 20%;
   width: 50%;

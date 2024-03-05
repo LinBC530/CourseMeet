@@ -80,7 +80,8 @@ async function getChatRecord(roomID) {
     const Meet = database.collection("MeetingRoom");
     const Chat = database.collection("ChatRoom");
     const ChatRoomID = await (
-      await Meet.findOne({ _id: new ObjectId(roomID) })
+      // await Meet.findOne({ _id: new ObjectId(roomID) })
+      await Meet.findOne({ _id: roomID })
     ).ChatRoomID;
     if (ChatRoomID) {
       const result = await Chat.findOne({ _id: new ObjectId(ChatRoomID) });

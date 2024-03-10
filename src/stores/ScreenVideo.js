@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { LocalStream, Client } from "ion-sdk-js";
 import { useMeetingData } from "./Meeting";
-// import { api } from "../boot/axios";
 
 const Meeting = useMeetingData();
 export const useScreenVideo = defineStore("counter", {
@@ -20,12 +19,14 @@ export const useScreenVideo = defineStore("counter", {
   persist: false,
   getters: {},
   actions: {
+
     // 聲音開關
     soundSwitch() {
       this.isOpenMic
         ? (this.userMedia.getAudioTracks()[0].enabled = true)
         : (this.userMedia.getAudioTracks()[0].enabled = false);
     },
+
     // 取得目前設備之麥克風
     async getUserMedia() {
       this.userMedia = await LocalStream.getUserMedia({
@@ -35,6 +36,7 @@ export const useScreenVideo = defineStore("counter", {
         // codec: "vp8",
       }).catch(() => null);
     },
+
     // 取得目前設備分享之畫面
     async getDisplayMedia() {
       this.displayMedia = await LocalStream.getDisplayMedia({
@@ -44,10 +46,12 @@ export const useScreenVideo = defineStore("counter", {
         // codec: "vp8",
       }).catch(() => null);
     },
+
     stop_all_media() {
       if (this.displayMedia) this.displayMedia.getTracks().forEach(track => {track.stop()});
       if (this.userMedia) this.userMedia.getTracks().forEach(track => {track.stop()});
     },
+
     stop_pub_video_src() {
       console.dir("stop1");
       if (this.displayMedia) {
@@ -60,6 +64,7 @@ export const useScreenVideo = defineStore("counter", {
         this.isPub = false;
       }
     },
+
     REC() {
       if (!this.isREC) {
         // 錄製分享畫面
@@ -85,17 +90,20 @@ export const useScreenVideo = defineStore("counter", {
         return false;
       }
     },
+
     async set_Pub_video_src() {
       if (!this.isPub) {
         await this.getUserMedia();
         await this.getDisplayMedia();
-        // this.displayMedia = await LocalStream.getDisplayMedia({
-        //   resolution: "vga",
-        //   video: true,
-        //   audio: true,
-        //   codec: "vp8",
-        // }).catch(() => null);
-        // console.dir(this.displayMedia);
+
+        if (!this.displayMedia) {
+          this.displayMedia = null;
+          this.userMedia = null;
+          return;
+        }
+
+        this.client_Stream = null;
+
         this.isPub = true;
         if (this.userMedia){
           this.displayMedia.addTrack(this.userMedia.getAudioTracks()[0]);
@@ -137,6 +145,7 @@ export const useScreenVideo = defineStore("counter", {
         this.isPub = false;
       }
     },
+
     joinRoom() {
       this.client.join(Meeting.RoomID);
       // 請求麥克風權限

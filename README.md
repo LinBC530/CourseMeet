@@ -17,6 +17,13 @@
 - 資料庫：MongoDB  
 - 即時通訊：WebRTC、ion-sfu、Socket.IO
 
+## 實機畫面
+![image1](image1.png)
+
+![image2](image2.png)
+
+![image3](image3.png)
+
 ## 啟動專案
 
 ### 前置準備

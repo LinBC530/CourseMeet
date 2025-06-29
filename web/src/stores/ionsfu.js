@@ -2,8 +2,10 @@ import { defineStore } from "pinia";
 import { Client, LocalStream, RemoteStream } from "ion-sdk-js";
 import { IonSFUJSONRPCSignal } from "ion-sdk-js/lib/signal/json-rpc-impl";
 import { useMeetingStore } from "./meeting";
+import { useAuth } from "./auth";
 import { storeToRefs } from "pinia";
 const { socket } = storeToRefs(useMeetingStore());
+const { user } = storeToRefs(useAuth());
 
 export const useIonsfuStore = defineStore("useIonsfuStore", {
   state: () => ({
@@ -138,7 +140,7 @@ export const useIonsfuStore = defineStore("useIonsfuStore", {
     async share_stream(type, stream) {
       this.client.publish(stream);
       socket.value.emit("sendStreamInfo", "all", {
-        user_id: "1",
+        user_id: user.value.id,
         type: type,
         stream_id: stream.id,
       });

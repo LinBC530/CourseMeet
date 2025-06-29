@@ -1,15 +1,15 @@
 <template>
   <q-page class="row no-warp fit">
     <!-- 主螢幕 -->
-    <VideoStream class="col fit bg-black" :name="user.name" :stream="main_stream" :muted="main_stream_muted" />
+    <VideoStream class="col fit bg-black" :name="main_stream_name" :stream="main_stream" :muted="main_stream_muted" />
     <!-- 視訊串流 -->
     <div class="col-3 column">
       <!-- 遠端視訊串流(攝影機) -->
       <q-scroll-area class="col bg-black" content-style="align-content: end;">
         <VideoStream class="camera bg-black" v-for="([key, stream]) in remote_camera_streams_array" :key="key"
-          :name="'userA'" :stream="stream.stream" />
+          :name="clients.get(stream.user_id).name" :stream="stream.stream" />
       </q-scroll-area>
-      
+
       <!-- 本地視訊串流(攝影機) -->
       <VideoStream class="col-auto q-pa-xs bg-green-8 rounded-borders" :name="user.name" :stream="camera_stream" />
 
@@ -50,6 +50,11 @@ const main_stream = computed(() => {
 const main_stream_muted = computed(() => {
   return screen_stream.value === main_stream.value;
 });
+
+const main_stream_name = computed(() => {
+  return screen_stream.value ? user.value.name : main_stream_id.value ? clients.value.get(remote_streams.value.get(main_stream_id.value)?.user_id)?.name ?? null : null;
+});
+
 
 // 離開時重置所有狀態
 onUnmounted(() => {

@@ -52,9 +52,19 @@ http://localhost
 #### 1. 啟動 MongoDB
 確保已安裝並啟動 MongoDB。
 
-#### 2. 啟動後端伺服器
+#### 2. 下載 ion-sfu
 
-#### 確保已安裝 Node.js
+請先將 [ion-sfu](https://github.com/ionorg/ion-sfu) 專案 clone 至本機：
+
+```bash
+git clone https://github.com/pion/ion-sfu.git
+```
+
+進入 `ion-sfu` 資料夾並依照官方文件進行編譯與啟動。
+
+#### 3. 啟動後端伺服器
+
+##### 確保已安裝 Node.js
 請先安裝 [Node.js](https://nodejs.org/)，以確保可以執行後端伺服器程式。
 
 進入 `server` 資料夾，安裝依賴套件並啟動伺服器：
@@ -64,7 +74,7 @@ npm install
 node server
 ```
 
-#### 3. 啟動前端應用程式 (Quasar)
+#### 4. 啟動前端應用程式 (Quasar)
 進入 `web` 資料夾，安裝依賴並啟動開發伺服器：
 ```bash
 cd web
@@ -72,7 +82,7 @@ npm install
 quasar dev
 ```
 
-#### 4. 開啟瀏覽器
+#### 5. 開啟瀏覽器
 在瀏覽器中開啟以下網址以查看專案：
 ```
 http://localhost:9000

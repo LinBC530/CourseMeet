@@ -124,7 +124,6 @@ export const useIonsfuStore = defineStore("useIonsfuStore", {
 
       try {
         await this.client.join(room_id, user_id);
-        console.log(`已加入房間 ${room_id}`);
       } catch (err) {
         throw err || new Error("加入房間失敗");
       }

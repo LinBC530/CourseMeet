@@ -104,7 +104,7 @@ async function join_meeting_room() {
 /**
  * 建立新的會議，並切換到該會議頁面。
  */
-function create_room() {
+async function create_room() {
   if (!isLoggedIn.value || isTokenExpired.value) {
     notify({
       type: 'negative',
@@ -113,7 +113,7 @@ function create_room() {
     return;
   }
 
-  const { status, data, message } = create_meeting_room();
+  const { status, data, message } = await create_meeting_room();
   switch (status) {
     case "success":
       set_room_id(data.room_id);

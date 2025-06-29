@@ -34,7 +34,6 @@ export const useMeetingStore = defineStore("useMeetingStore", {
      * @param {Object} user - 使用者信息
      */
     async socker_join_room(room , user) {
-      console.log("Joining room:", room, "with user:", user);
       this.socket.emit("joinRoom", room, user);
       this.RoomID = room;
     },

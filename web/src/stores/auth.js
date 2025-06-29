@@ -30,7 +30,6 @@ export const useAuth = defineStore("useAuth", {
   },
   actions: {
     setUser(user) {
-      console.log(user);
       this.user.id = user.id;
       this.user.name = user.name;
       this.user.role = user.role;
